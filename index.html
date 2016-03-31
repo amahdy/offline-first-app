@@ -12,9 +12,13 @@
   </style>
 
   <script>
+
+  var selected = {};
+  var grid;
+
   (function() {
     HTMLImports.whenReady(function() {
-      var grid = document.querySelector('#lazy');
+      grid = document.querySelector('#lazy');
 
       grid.columns[0].renderer = function(cell) {
         cell.element.textContent = cell.row.index;
@@ -25,6 +29,15 @@
           callback(json.result, json.size);
         });
       };
+
+      grid.addEventListener('selected-items-changed', function() {
+        grid.selection.selected(function(idx) {
+          grid.getItem(idx, (err, res) => selected = res);
+          document.getElementById('fn').value = selected.firstName;
+          document.getElementById('ln').value = selected.lastName;
+          document.getElementById('em').value = selected.email;
+        });
+      });
     });
 
     function getJSON(url, callback) {
@@ -38,6 +51,12 @@
       xhr.send();
     }
   })();
+
+  var update = function() {
+    selected.firstName = document.getElementById('fn').value;
+    selected.lastName = document.getElementById('ln').value;
+    selected.email = document.getElementById('em').value;
+  }
   </script>
 
 </head>
@@ -61,6 +80,15 @@
       </thead>
     </table>
   </vaadin-grid>
+
+  <h3>Editor</h3>
+  <table>
+    <tr><td>First Name</td> <td><input type="text" id="fn" /></td></tr>
+    <tr><td>Last Name</td>  <td><input type="text" id="ln" /></td></tr>
+    <tr><td>Email</td>      <td><input type="text" id="em" /></td></tr>
+
+    <tr><td><button onclick="update()">Update</button></td></tr>
+  </table>
 </body>
 
 </html>
