@@ -1,0 +1,66 @@
+<html>
+
+<head>
+  <script src="https://cdn.vaadin.com/vaadin-core-elements/latest/webcomponentsjs/webcomponents-lite.min.js"></script>
+  <link rel="import"
+      href="https://cdn.vaadin.com/vaadin-core-elements/latest/vaadin-grid/vaadin-grid.html">
+
+  <style>
+  #lazy {
+    height: 300px;
+  }
+  </style>
+
+  <script>
+  (function() {
+    HTMLImports.whenReady(function() {
+      var grid = document.querySelector('#lazy');
+
+      grid.columns[0].renderer = function(cell) {
+        cell.element.textContent = cell.row.index;
+      };
+
+      grid.items = function(params, callback) {
+        getJSON('https://demo.vaadin.com/demo-data/1.0/people?index=' + params.index + '&count=' + params.count, function(json) {
+          callback(json.result, json.size);
+        });
+      };
+    });
+
+    function getJSON(url, callback) {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+          callback(JSON.parse(xhr.responseText));
+        }
+      };
+      xhr.open('GET', url, true);
+      xhr.send();
+    }
+  })();
+  </script>
+
+</head>
+
+<body>
+  <vaadin-grid id="lazy">
+    <table>
+      <colgroup>
+        <col name="number" width="80">
+        <col name="firstName">
+        <col name="lastName">
+        <col name="email">
+      </colgroup>
+      <thead>
+      <tr>
+        <th>#</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Email</th>
+      </tr>
+      </thead>
+    </table>
+  </vaadin-grid>
+</body>
+
+</html>
