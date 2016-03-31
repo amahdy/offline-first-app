@@ -19,6 +19,9 @@
   var grid;
 
   var remote_db = new PouchDB('http://localhost:5984/techlunch');
+  var local_db = new PouchDB('local_techlunch');
+
+  PouchDB.replicate(remote_db, local_db);
 
   (function() {
     HTMLImports.whenReady(function() {
@@ -28,7 +31,7 @@
         cell.element.textContent = cell.row.index;
       };
 
-      remote_db.allDocs().then(function(res) {
+      local_db.allDocs().then(function(res) {
         var ids = res.rows;
 
         grid.items = function(params, callback) {
@@ -39,7 +42,7 @@
           }
 
           if(params.count > 0) {
-          remote_db.bulkGet({ docs: sub_ids}).then(function(json) {
+          local_db.bulkGet({ docs: sub_ids }).then(function(json) {
 
               var data = [];
               for(var i=0; i<json.results.length; i++) {
