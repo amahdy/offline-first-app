@@ -11,10 +11,14 @@
   }
   </style>
 
+  <script src="pouchdb-5.3.1.min.js"></script>
+
   <script>
 
   var selected = {};
   var grid;
+
+  var remote_db = new PouchDB('http://localhost:5984/techlunch');
 
   (function() {
     HTMLImports.whenReady(function() {
@@ -24,11 +28,31 @@
         cell.element.textContent = cell.row.index;
       };
 
-      grid.items = function(params, callback) {
-        getJSON('https://demo.vaadin.com/demo-data/1.0/people?index=' + params.index + '&count=' + params.count, function(json) {
-          callback(json.result, json.size);
-        });
-      };
+      remote_db.allDocs().then(function(res) {
+        var ids = res.rows;
+
+        grid.items = function(params, callback) {
+
+          var sub_ids=[];
+          for(var i=params.index; i<params.count + params.index; i++) {
+            sub_ids[i-params.index] = { id: ids[i].id, rev: ids[i].value.rev };
+          }
+
+          if(params.count > 0) {
+          remote_db.bulkGet({ docs: sub_ids}).then(function(json) {
+
+              var data = [];
+              for(var i=0; i<json.results.length; i++) {
+                data[i] = json.results[i].docs[0].ok;
+              }
+
+              callback(data, ids.length);
+          });
+          }else {
+            callback(sub_ids, ids.length);
+          }
+        };
+      });
 
       grid.addEventListener('selected-items-changed', function() {
         grid.selection.selected(function(idx) {
@@ -39,17 +63,6 @@
         });
       });
     });
-
-    function getJSON(url, callback) {
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-          callback(JSON.parse(xhr.responseText));
-        }
-      };
-      xhr.open('GET', url, true);
-      xhr.send();
-    }
   })();
 
   var update = function() {
