@@ -72,6 +72,10 @@
     selected.firstName = document.getElementById('fn').value;
     selected.lastName = document.getElementById('ln').value;
     selected.email = document.getElementById('em').value;
+
+    local_db.put(selected).then(function(response) {
+      grid.refreshItems(); // this does not work :-(
+    });
   }
   </script>
 
