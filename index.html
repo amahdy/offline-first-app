@@ -12,6 +12,7 @@
   </style>
 
   <script src="pouchdb-5.3.1.min.js"></script>
+  <script src="pouchdb.find.min.js"></script>
 
   <script>
 
@@ -22,6 +23,12 @@
   var local_db = new PouchDB('local_techlunch');
 
   PouchDB.sync(remote_db, local_db);
+
+  local_db.createIndex({
+    index: {
+      fields: ['firstName']
+    }
+  });
 
   (function() {
     HTMLImports.whenReady(function() {
@@ -77,6 +84,15 @@
       grid.refreshItems(); // this does not work :-(
     });
   }
+
+  var find = function() {
+    var q = document.getElementById('search').value;
+    local_db.find({selector: {firstName: q}}).then(function(res) {
+      for(var r in res.docs) {
+        document.write(res.docs[r].firstName + ", " + res.docs[r].lastName + ", " + res.docs[r].email + "<br>");
+      }
+    });
+  }
   </script>
 
 </head>
@@ -109,6 +125,9 @@
 
     <tr><td><button onclick="update()">Update</button></td></tr>
   </table>
+
+  <hr />
+  First Name: <input type="text" id="search" /> <button onclick="find()">FIND</button>
 </body>
 
 </html>
