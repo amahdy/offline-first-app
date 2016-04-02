@@ -22,7 +22,10 @@
   var remote_db = new PouchDB('http://localhost:5984/techlunch');
   var local_db = new PouchDB('local_techlunch');
 
-  PouchDB.sync(remote_db, local_db);
+  PouchDB.sync(remote_db, local_db, {
+    live: true,
+    retry: true
+  });
 
   local_db.createIndex({
     index: {
