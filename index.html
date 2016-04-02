@@ -17,6 +17,7 @@
   <script>
 
   var selected = {};
+  var ids = [];
   var grid;
 
   var remote_db = new PouchDB('http://localhost:5984/techlunch');
@@ -42,7 +43,7 @@
       };
 
       local_db.allDocs().then(function(res) {
-        var ids = res.rows;
+        ids = res.rows;
 
         grid.items = function(params, callback) {
 
@@ -84,7 +85,9 @@
     selected.email = document.getElementById('em').value;
 
     local_db.put(selected).then(function(response) {
-      grid.refreshItems(); // this does not work :-(
+      var item = ids.findIndex(function(f) { return f.id === response.id });
+      ids[item].value.rev = response.rev;
+      grid.refreshItems();
     });
   }
 
