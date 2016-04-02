@@ -87,6 +87,7 @@
     local_db.put(selected).then(function(response) {
       var item = ids.findIndex(function(f) { return f.id === response.id });
       ids[item].value.rev = response.rev;
+      selected._rev = response.rev;
       grid.refreshItems();
     });
   }
