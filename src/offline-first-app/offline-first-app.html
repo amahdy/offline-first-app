@@ -37,10 +37,18 @@
           value: new PouchDB('http://localhost:5984/personsdb'),
         },
 
+        // Local DB, the synched version of `remoteDB`
+        localDB: {
+          type: PouchDB,
+          value: new PouchDB('local_personsdb'),
+        },
+
         allDocs: Array, // All docs in the grid.
       },
 
       ready: function() {
+
+        PouchDB.replicate(this.remoteDB, this.localDB);
 
         var grid = this.$.lazyGrid;
 
@@ -55,7 +63,7 @@
           cell.element.textContent = cell.row.index;
         };
 
-        this.remoteDB.allDocs().then(result => {
+        this.localDB.allDocs().then(result => {
           this.allDocs = result.rows;
 
           grid.items = (params, callback) => {
@@ -73,7 +81,7 @@
 
             var data = [];
             if(currentDocs.length > 0) {
-              this.remoteDB.bulkGet({
+              this.localDB.bulkGet({
                   docs: currentDocs,
               }).then(json => {
                 for(var i=0; i<json.results.length; i++) {
