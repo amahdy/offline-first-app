@@ -1,5 +1,6 @@
 
 <script src="../../bower_components/pouchdb/dist/pouchdb.min.js"></script>
+<script src="../../bower_components/pouchdb-find/dist/pouchdb.find.min.js"></script>
 
 <link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../../bower_components/vaadin-split-layout/vaadin-split-layout.html">
@@ -108,6 +109,12 @@
         PouchDB.sync(this.remoteDB, this.localDB, {
           live: true,
           retry: true,
+        });
+
+        this.localDB.createIndex({
+          index: {
+            fields: ['firstName'],
+          }
         });
 
         var grid = this.$.lazyGrid;

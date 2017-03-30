@@ -7,7 +7,8 @@
     "vaadin-grid": "^1.2.2",
     "pouchdb": "^6.1.2",
     "paper-input": "^1.1.23",
-    "vaadin-split-layout": "^1.1.0"
+    "vaadin-split-layout": "^1.1.0",
+    "pouchdb-find": "^0.10.5"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
