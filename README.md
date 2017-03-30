@@ -1,6 +1,6 @@
 # Offline-First App with WebComponents
 
-# Instructions and updated code, coming soon!
+# Code updated, detailed instructions coming soon!
 
 ![App Preview](./readme_files/preview.png)
 
