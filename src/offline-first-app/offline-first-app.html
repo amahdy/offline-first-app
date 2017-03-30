@@ -1,4 +1,6 @@
 
+<script src="../../bower_components/pouchdb/dist/pouchdb.min.js"></script>
+
 <link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
@@ -29,10 +31,13 @@
       is: 'offline-first-app',
 
       properties: {
-        prop1: {
-          type: String,
-          value: 'offline-first-app',
+        // Remote DB, running on a local instance of CouchDB.
+        remoteDB: {
+          type: PouchDB,
+          value: new PouchDB('http://localhost:5984/personsdb'),
         },
+
+        allDocs: Array, // All docs in the grid.
       },
 
       ready: function() {
@@ -50,24 +55,37 @@
           cell.element.textContent = cell.row.index;
         };
 
-        grid.items = (params, callback) => {
-          this.getJSON('https://demo.vaadin.com/demo-data/1.0/people?index='
-                    + params.index + '&count=' + params.count, function(json) {
-             callback(json.result, json.size);
-           }
-         );
-        };
-      },
+        this.remoteDB.allDocs().then(result => {
+          this.allDocs = result.rows;
 
-      getJSON: function(url, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-            callback(JSON.parse(xhr.responseText));
+          grid.items = (params, callback) => {
+
+            // Construct docs starting from current index,
+            // and up to the requested length by Grid.
+            var currentDocs = [];
+            var currentIndex = params.index;
+            for(var i=currentIndex; i<currentIndex+params.count; i++) {
+              currentDocs[i-currentIndex] = {
+                id: this.allDocs[i].id,
+                rev: this.allDocs[i].value.rev,
+              };
+            }
+
+            var data = [];
+            if(currentDocs.length > 0) {
+              this.remoteDB.bulkGet({
+                  docs: currentDocs,
+              }).then(json => {
+                for(var i=0; i<json.results.length; i++) {
+                  data[i] = json.results[i].docs[0].ok;
+                }
+                callback(data, this.allDocs.length);
+              });
+            }else {
+              callback(data, this.allDocs.length);
+            }
           }
-        };
-        xhr.open('GET', url, true);
-        xhr.send();
+        });
       },
 
     });
