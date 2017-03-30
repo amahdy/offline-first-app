@@ -81,7 +81,10 @@
 
       ready: function() {
 
-        PouchDB.replicate(this.remoteDB, this.localDB);
+        PouchDB.sync(this.remoteDB, this.localDB, {
+          live: true,
+          retry: true,
+        });
 
         var grid = this.$.lazyGrid;
 
