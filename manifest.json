@@ -1,0 +1,7 @@
+{
+  "name": "offline-first-app",
+  "short_name": "offline-first-app",
+  "description": "Offline-First App with WebComponents",
+  "start_url": "/",
+  "display": "standalone"
+}
