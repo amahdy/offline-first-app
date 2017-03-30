@@ -187,7 +187,17 @@
       },
 
       find : function() {
+        var q = this.$.search.value;
 
+        this.$.searchResultsArea.innerHTML = "<h3>Results</h3><hr>";
+        this.localDB.find({selector: {firstName: q}}).then(response => {
+          for(var r in response.docs) {
+            this.$.searchResultsArea.innerHTML +=
+                response.docs[r].firstName + ", "
+                + response.docs[r].lastName + ", "
+                + response.docs[r].email + "<br>";
+          }
+        });
       },
 
     });
