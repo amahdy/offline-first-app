@@ -143,6 +143,13 @@
         this.selected.firstName = this.$.firstName.value;
         this.selected.lastName = this.$.lastName.value;
         this.selected.email = this.$.email.value;
+
+        this.localDB.put(this.selected).then(response => {
+          this.allDocs[this.selected.id].value.rev = response.rev;
+          this.selected._rev = response.rev;
+
+          this.$.lazyGrid.refreshItems();
+        });
       },
 
     });
