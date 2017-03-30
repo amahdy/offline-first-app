@@ -33,11 +33,27 @@
         margin: 8px;
       }
 
+      #searchArea {
+        padding-top: 120px;
+      }
+
+      #searchResultsArea {
+        padding-top: 60px;
+      }
+
       paper-button.update-button {
         margin-top: 12px;
         margin-right: 0px;
         float: right;
         background-color: #00b4f0;
+        color: white;
+      }
+
+      paper-button.find-button {
+        margin-top: 12px;
+        margin-right: 0px;
+        float: right;
+        background-color: #34373b;
         color: white;
       }
     </style>
@@ -53,6 +69,14 @@
         <paper-input label="Last Name" id="lastName"></paper-input>
         <paper-input label="E-Mail" id="email"></paper-input>
         <paper-button class="update-button" raised on-tap="update">Update</paper-button>
+
+        <div id="searchArea">
+          <h3>Search</h3>
+          <paper-input label="First Name" id="search"></paper-input>
+          <paper-button class="find-button" raised on-tap="find">Find</paper-button>
+        </div>
+
+        <div id="searchResultsArea"></div
       </div>
     </vaadin-split-layout>
   </template>
@@ -153,6 +177,10 @@
 
           this.$.lazyGrid.refreshItems();
         });
+      },
+
+      find : function() {
+
       },
 
     });
