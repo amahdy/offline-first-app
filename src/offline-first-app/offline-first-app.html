@@ -2,6 +2,9 @@
 <script src="../../bower_components/pouchdb/dist/pouchdb.min.js"></script>
 
 <link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
+<link rel="import" href="../../bower_components/vaadin-split-layout/vaadin-split-layout.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <dom-module id="offline-first-app">
@@ -11,18 +14,47 @@
         display: block;
       }
 
+      #topLayout {
+        height: 100%;
+      }
+
       #lazyGrid {
         height: 100%;
       }
 
       #gridArea {
+        width: 75%;
         height: 100%;
+      }
+
+      #editorArea {
+        width: 25%;
+        height: 100%;
+        margin: 8px;
+      }
+
+      paper-button.update-button {
+        margin-top: 12px;
+        margin-right: 0px;
+        float: right;
+        background-color: #00b4f0;
+        color: white;
       }
     </style>
 
-    <div id="gridArea">
-      <vaadin-grid id="lazyGrid"></vaadin-grid>
-    </div>
+    <vaadin-split-layout id="topLayout">
+      <div id="gridArea">
+        <vaadin-grid id="lazyGrid"></vaadin-grid>
+      </div>
+
+      <div id="editorArea">
+        <h3>Editor</h3>
+        <paper-input label="First Name" id="firstName"></paper-input>
+        <paper-input label="Last Name" id="lastName"></paper-input>
+        <paper-input label="E-Mail" id="email"></paper-input>
+        <paper-button class="update-button" raised on-tap="update">Update</paper-button>
+      </div>
+    </vaadin-split-layout>
   </template>
 
   <script>
@@ -43,6 +75,7 @@
           value: new PouchDB('local_personsdb'),
         },
 
+        selected: Object, // The selected object in the grid.
         allDocs: Array, // All docs in the grid.
       },
 
@@ -94,6 +127,22 @@
             }
           }
         });
+
+        grid.addEventListener('selected-items-changed', () =>
+          grid.selection.selected(idx => {
+            grid.getItem(idx, (err, response) => this.selected = response);
+            this.selected.id = idx; // This adds extra value in DB
+            this.$.firstName.value = this.selected.firstName;
+            this.$.lastName.value = this.selected.lastName;
+            this.$.email.value = this.selected.email;
+          })
+        );
+      },
+
+      update: function() {
+        this.selected.firstName = this.$.firstName.value;
+        this.selected.lastName = this.$.lastName.value;
+        this.selected.email = this.$.email.value;
       },
 
     });
