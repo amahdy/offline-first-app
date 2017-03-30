@@ -1,3 +1,5 @@
+
+<link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <dom-module id="offline-first-app">
@@ -6,8 +8,19 @@
       :host {
         display: block;
       }
+
+      #lazyGrid {
+        height: 100%;
+      }
+
+      #gridArea {
+        height: 100%;
+      }
     </style>
-    <h2>Hello [[prop1]]</h2>
+
+    <div id="gridArea">
+      <vaadin-grid id="lazyGrid"></vaadin-grid>
+    </div>
   </template>
 
   <script>
@@ -20,6 +33,41 @@
           type: String,
           value: 'offline-first-app',
         },
+      },
+
+      ready: function() {
+
+        var grid = this.$.lazyGrid;
+
+        grid.columns = [
+          { name: '#', width: 70},
+          { name: 'firstName' },
+          { name: 'lastName' },
+          { name: 'email' },
+        ];
+
+        grid.columns[0].renderer = function(cell) {
+          cell.element.textContent = cell.row.index;
+        };
+
+        grid.items = (params, callback) => {
+          this.getJSON('https://demo.vaadin.com/demo-data/1.0/people?index='
+                    + params.index + '&count=' + params.count, function(json) {
+             callback(json.result, json.size);
+           }
+         );
+        };
+      },
+
+      getJSON: function(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+            callback(JSON.parse(xhr.responseText));
+          }
+        };
+        xhr.open('GET', url, true);
+        xhr.send();
       },
 
     });

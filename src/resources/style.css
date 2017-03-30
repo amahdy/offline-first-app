@@ -1,0 +1,8 @@
+body {
+  font-family: roboto;
+}
+
+html, body, offline-first-app {
+  height: 100%;
+  margin: 0px;
+}
