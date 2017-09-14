@@ -36,18 +36,28 @@ Those steps are only *the base* for creating a similar app, always check the `ma
 ## Try out this application
 First clone this project locally then:
 
-### Installing Dependencies
+## How to run
 
-Make sure you have [Bower](https://bower.io) installed. Then run `bower install` to install local dependencies.
-
-### Installing Polymer-CLI
-
-Also, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polymer-cli) installed. Then run `polymer serve` to serve your application locally.
-
-### Viewing Your Application
-
-```bash
-$ polymer serve
+1) Create database
+```
+curl -X PUT http://127.0.0.1:5984/personsdb
 ```
 
-The application will be available on this address by default: `http://localhost:8080`
+2) Install bower
+```
+bower install
+```
+
+4) Install polymer
+```
+npm install -g polymer-cli
+```
+
+5) Run with port 3000
+```
+polymer serve --port 3000
+```
+
+
+## Tags
+Couchdb, offline, polymer, create, update, vaadin-grid

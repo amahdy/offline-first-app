@@ -32,6 +32,7 @@
         width: 25%;
         height: 100%;
         margin: 8px;
+        position: relative;
       }
 
       #searchArea {
@@ -48,6 +49,17 @@
         float: right;
         background-color: #00b4f0;
         color: white;
+      }
+      
+      paper-button.add-button {
+        margin-top: 12px;
+        margin-right: 0px;
+        float: right;
+        background-color: #00b4f0;
+        color: white;
+        position: absolute;
+        top: 0;
+        right: 0;
       }
 
       paper-button.find-button {
@@ -66,10 +78,12 @@
 
       <div id="editorArea">
         <h3>Editor</h3>
+        <paper-button class="add-button" raised on-tap="add">Add</paper-button>
         <paper-input label="First Name" id="firstName"></paper-input>
         <paper-input label="Last Name" id="lastName"></paper-input>
         <paper-input label="E-Mail" id="email"></paper-input>
-        <paper-button class="update-button" raised on-tap="update">Update</paper-button>
+        <paper-button class="update-button" hidden$="{{!isUpdate}}" raised on-tap="update">Update</paper-button>
+        <paper-button class="update-button" hidden$="{{isUpdate}}" raised on-tap="update">Create</paper-button>
 
         <div id="searchArea">
           <h3>Search</h3>
@@ -100,11 +114,20 @@
           value: new PouchDB('local_personsdb'),
         },
 
-        selected: Object, // The selected object in the grid.
-        allDocs: Array, // All docs in the grid.
+        isUpdate:{
+          type: Boolean,
+          value: false
+        },
+
+        selected: {
+          type: Object, 
+          value: {},
+        },// The selected object in the grid.
+        allDocs: Array
       },
 
       ready: function() {
+        
 
         PouchDB.sync(this.remoteDB, this.localDB, {
           live: true,
@@ -134,6 +157,7 @@
           this.allDocs = result.rows;
 
           grid.items = (params, callback) => {
+
 
             // Construct docs starting from current index,
             // and up to the requested length by Grid.
@@ -169,6 +193,7 @@
             this.$.firstName.value = this.selected.firstName;
             this.$.lastName.value = this.selected.lastName;
             this.$.email.value = this.selected.email;
+            this.isUpdate = true;
           })
         );
       },
@@ -177,13 +202,45 @@
         this.selected.firstName = this.$.firstName.value;
         this.selected.lastName = this.$.lastName.value;
         this.selected.email = this.$.email.value;
+        
+        var isUpdate = true;
+        if(!this.selected.id) { 
+          isUpdate = false;
+        }
 
-        this.localDB.put(this.selected).then(response => {
-          this.allDocs[this.selected.id].value.rev = response.rev;
-          this.selected._rev = response.rev;
+        if(!isUpdate) { /* For create case*/
+          this.localDB.post(this.selected).then(response => {
+            this.allDocs[this.allDocs.length] = {
+              value: {
+                rev: response.rev
+              },
+              id: response.id
+            }
+            this.selected._rev = response.rev;
+          });
 
-          this.$.lazyGrid.refreshItems();
-        });
+          this.$.firstName.value = '';
+          this.$.lastName.value = '';
+          this.$.email.value = '';
+        }
+        else {
+          this.localDB.put(this.selected).then(response => {
+            this.allDocs[this.selected.id].value.rev = response.rev;
+            this.allDocs[this.selected.id].id = response.id;
+            this.selected._rev = response.rev;
+            
+          });
+        }
+
+        this.$.lazyGrid.refreshItems();
+      },
+
+      add: function() {
+        this.selected = {};
+        this.$.firstName.value = '';
+        this.$.lastName.value = '';
+        this.$.email.value = '';
+        this.isUpdate = false;
       },
 
       find : function() {
