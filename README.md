@@ -53,11 +53,12 @@ bower install
 npm install -g polymer-cli
 ```
 
-5) Run with port 3000
+5) Run with port 8080
 ```
-polymer serve --port 3000
+polymer serve --port 8080
 ```
 
+-The application will be available on this address by default: `http://localhost:8080`
 
 ## Tags
 Couchdb, offline, polymer, create, update, vaadin-grid
