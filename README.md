@@ -34,31 +34,26 @@ Those steps are only *the base* for creating a similar app, always check the `ma
 [Step 9 | Query local storage](https://github.com/amahdy/offline-first-app/commit/ca720ac5612b693947b6a50b5c1bba79799242e3)
 
 ## Try out this application
-First clone this project locally then:
 
-## How to run
+Make sure you have [Bower](https://bower.io) and [Polymer CLI](https://www.npmjs.com/package/polymer-cli) installed, also make sure you have a local [CouchDB](http://couchdb.apache.org) running. Clone this project locally then:
 
-1) Create database
-```
-curl -X PUT http://127.0.0.1:5984/personsdb
-```
+### Configuring Database
 
-2) Install bower
-```
-bower install
+Create a database `persondb` inside CouchDB and fill it with dummy data:
+```bash
+$ curl -X PUT http://127.0.0.1:5984/personsdb
 ```
 
-4) Install polymer
-```
-npm install -g polymer-cli
+### Installing Dependencies
+
+Install Bower dependencies:
+```bash
+$ bower install
 ```
 
-5) Run with port 8080
-```
-polymer serve --port 8080
-```
+### Viewing Your Application
 
--The application will be available on this address by default: `http://localhost:8080`
-
-## Tags
-Couchdb, offline, polymer, create, update, vaadin-grid
+```bash
+$ polymer serve --port 8080
+```
+The application will be available on this address by default: [http://localhost:8080](http://localhost:8080).
