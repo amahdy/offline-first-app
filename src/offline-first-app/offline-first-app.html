@@ -50,7 +50,7 @@
         background-color: #00b4f0;
         color: white;
       }
-      
+
       paper-button.add-button {
         margin-top: 12px;
         margin-right: 0px;
@@ -114,20 +114,20 @@
           value: new PouchDB('local_personsdb'),
         },
 
-        isUpdate:{
+        isUpdate: {
           type: Boolean,
           value: false
         },
 
         selected: {
-          type: Object, 
+          type: Object,
           value: {},
         },// The selected object in the grid.
         allDocs: Array
       },
 
       ready: function() {
-        
+
 
         PouchDB.sync(this.remoteDB, this.localDB, {
           live: true,
@@ -157,7 +157,6 @@
           this.allDocs = result.rows;
 
           grid.items = (params, callback) => {
-
 
             // Construct docs starting from current index,
             // and up to the requested length by Grid.
@@ -202,9 +201,9 @@
         this.selected.firstName = this.$.firstName.value;
         this.selected.lastName = this.$.lastName.value;
         this.selected.email = this.$.email.value;
-        
+
         var isUpdate = true;
-        if(!this.selected.id) { 
+        if(!this.selected.id) {
           isUpdate = false;
         }
 
@@ -222,13 +221,12 @@
           this.$.firstName.value = '';
           this.$.lastName.value = '';
           this.$.email.value = '';
-        }
-        else {
+        }else {
           this.localDB.put(this.selected).then(response => {
             this.allDocs[this.selected.id].value.rev = response.rev;
             this.allDocs[this.selected.id].id = response.id;
             this.selected._rev = response.rev;
-            
+
           });
         }
 
