@@ -123,11 +123,10 @@
           type: Object,
           value: {},
         },// The selected object in the grid.
-        allDocs: Array
+        allDocs: Array, // All docs in the grid.
       },
 
       ready: function() {
-
 
         PouchDB.sync(this.remoteDB, this.localDB, {
           live: true,
@@ -202,12 +201,7 @@
         this.selected.lastName = this.$.lastName.value;
         this.selected.email = this.$.email.value;
 
-        var isUpdate = true;
-        if(!this.selected.id) {
-          isUpdate = false;
-        }
-
-        if(!isUpdate) { /* For create case*/
+        if(!this.isUpdate) { /* For create case*/
           this.localDB.post(this.selected).then(response => {
             this.allDocs[this.allDocs.length] = {
               value: {
@@ -216,21 +210,23 @@
               id: response.id
             }
             this.selected._rev = response.rev;
-          });
 
-          this.$.firstName.value = '';
-          this.$.lastName.value = '';
-          this.$.email.value = '';
+            this.$.lazyGrid.refreshItems();
+
+            // TODO: Scroll to the newly created item and select it instead of:
+            this.$.firstName.value = '';
+            this.$.lastName.value = '';
+            this.$.email.value = '';
+          });
         }else {
           this.localDB.put(this.selected).then(response => {
             this.allDocs[this.selected.id].value.rev = response.rev;
             this.allDocs[this.selected.id].id = response.id;
             this.selected._rev = response.rev;
 
+            this.$.lazyGrid.refreshItems();
           });
         }
-
-        this.$.lazyGrid.refreshItems();
       },
 
       add: function() {
