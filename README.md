@@ -37,13 +37,6 @@ Those steps are only *the base* for creating a similar app, always check the `ma
 
 Make sure you have [Bower](https://bower.io) and [Polymer CLI](https://www.npmjs.com/package/polymer-cli) installed, also make sure you have a local [CouchDB](http://couchdb.apache.org) running. Clone this project locally then:
 
-### Configuring Database
-
-Create a database `persondb` inside CouchDB and fill it with dummy data:
-```bash
-$ curl -X PUT http://127.0.0.1:5984/personsdb
-```
-
 ### Installing Dependencies
 
 Install Bower dependencies:
@@ -51,9 +44,17 @@ Install Bower dependencies:
 $ bower install
 ```
 
-### Viewing Your Application
+### Running Your Application
 
+Start the application on port 8080
 ```bash
 $ polymer serve --port 8080
 ```
+
+### Configuring Database
+
+Create a database `persondb` inside CouchDB and fill it with dummy data or reset the existing one. You can do this by visiting the local [setup page http://localhost:8080/setup.html](http://localhost:8080/setup.html).
+
+### Viewing Your Application
+
 The application will be available on this address by default: [http://localhost:8080](http://localhost:8080).
