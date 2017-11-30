@@ -135,7 +135,8 @@
           retry: true,
         });
 
-        this.localDB.allDocs().then(result => {
+        this.localDB.allDocs({
+          include_docs: true, endkey: "_design"}).then(result => {
           this.allDocs = result.rows;
 
           this.$.lazyGrid.items = (params, callback) => {
