@@ -61,7 +61,7 @@
         <paper-fab class="add-button" on-tap="add" icon="add"></paper-fab>
       </div>
 
-      <person-editor id="editor" person$="{{selected}}"></person-editor>
+      <person-editor id="editor"></person-editor>
 
     </vaadin-split-layout>
   </template>
@@ -73,7 +73,6 @@
 
       ready: function() {
         this.$.offlineGrid.addEventListener('on-select', evt => {
-          // TODO: Grid looses focus so need to refresh selection
           this.$.editor.person = evt.detail.selected;
         });
 
