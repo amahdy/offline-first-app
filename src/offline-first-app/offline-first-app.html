@@ -2,14 +2,13 @@
 <script src="../../bower_components/pouchdb/dist/pouchdb.min.js"></script>
 <script src="../../bower_components/pouchdb-find/dist/pouchdb.find.min.js"></script>
 
+<link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../../bower_components/vaadin-split-layout/vaadin-split-layout.html">
-<link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
-<link rel="import" href="../../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
-<link rel="import" href="../../bower_components/paper-styles/element-styles/paper-material-styles.html">
+
+<link rel="import" href="./person-editor.html">
 
 <dom-module id="offline-first-app">
   <template>
@@ -31,27 +30,11 @@
         height: 100%;
       }
 
-      #editorArea {
+      #editor {
         width: 25%;
         height: 100%;
         margin: 8px;
         position: relative;
-      }
-
-      #searchArea {
-        padding-top: 120px;
-      }
-
-      #searchResultsArea {
-        padding-top: 60px;
-      }
-
-      paper-button.update-button {
-        margin-top: 12px;
-        margin-right: 0px;
-        float: right;
-        background-color: #00b4f0;
-        color: white;
       }
 
       paper-fab.add-button {
@@ -60,42 +43,23 @@
         float: right;
         background-color: #00b4f0;
         color: white;
-        position: absolute;
+        /*position: absolute;
         top: 0;
-        right: 0;
-      }
+        right: 0;*/
 
-      paper-button.find-button {
-        margin-top: 12px;
-        margin-right: 0px;
-        float: right;
-        background-color: #34373b;
-        color: white;
+        position: fixed;
+        right: 27%;
+        bottom: 30px;
       }
     </style>
 
     <vaadin-split-layout id="topLayout">
       <div id="gridArea">
         <vaadin-grid id="lazyGrid"></vaadin-grid>
+        <paper-fab class="add-button" on-tap="add" icon="add"></paper-fab>
       </div>
 
-      <div id="editorArea">
-        <h3>Editor</h3>
-        <paper-fab class="add-button" on-tap="add" icon="add">+</paper-fab>
-        <paper-input label="First Name" id="firstName"></paper-input>
-        <paper-input label="Last Name" id="lastName"></paper-input>
-        <paper-input label="E-Mail" id="email"></paper-input>
-        <paper-button class="update-button" hidden$="{{!isUpdate}}" raised on-tap="update">Update</paper-button>
-        <paper-button class="update-button" hidden$="{{isUpdate}}" raised on-tap="update">Create</paper-button>
-
-        <div id="searchArea">
-          <h3>Search</h3>
-          <paper-input label="First Name" id="search"></paper-input>
-          <paper-button class="find-button" raised on-tap="find">Find</paper-button>
-        </div>
-
-        <div id="searchResultsArea"></div
-      </div>
+      <person-editor id="editor" person$="{{selected}}"></person-editor>
     </vaadin-split-layout>
   </template>
 
@@ -115,11 +79,6 @@
         localDB: {
           type: PouchDB,
           value: new PouchDB('local_personsdb'),
-        },
-
-        isUpdate: {
-          type: Boolean,
-          value: false
         },
 
         selected: {
@@ -206,67 +165,55 @@
           grid.selection.selected(idx => {
             grid.getItem(idx, (err, response) => this.selected = response);
             this.selected.id = idx; // This adds extra value in DB
-            this.$.firstName.value = this.selected.firstName;
-            this.$.lastName.value = this.selected.lastName;
-            this.$.email.value = this.selected.email;
-            this.isUpdate = true;
+            // TODO: Grid looses focus so need to refresh selection
+            this.$.editor.person = this.selected;
           })
         );
-      },
 
-      update: function() {
-        this.selected.firstName = this.$.firstName.value;
-        this.selected.lastName = this.$.lastName.value;
-        this.selected.email = this.$.email.value;
+        this.$.editor.addEventListener('on-update', evt => {
+          var newPerson = evt.detail.newPerson;
+          this.localDB.put(newPerson).then(response => {
+            this.allDocs[newPerson.id].value.rev = response.rev;
+            this.allDocs[newPerson.id].id = response.id;
+            this.selected._rev = response.rev;
 
-        if(!this.isUpdate) { /* For create case*/
-          this.localDB.post(this.selected).then(response => {
+            grid.refreshItems();
+          });
+        });
+
+        this.$.editor.addEventListener('on-create', evt => {
+          var newPerson = evt.detail.newPerson;
+          this.localDB.post(newPerson).then(response => {
             this.allDocs[this.allDocs.length] = {
               value: {
                 rev: response.rev
               },
               id: response.id
             }
-            this.selected._rev = response.rev;
+            // this.selected._rev = response.rev;
 
-            this.$.lazyGrid.refreshItems();
-
-            // TODO: Scroll to the newly created item and select it instead of:
-            this.$.firstName.value = '';
-            this.$.lastName.value = '';
-            this.$.email.value = '';
+            grid.refreshItems();
+            // TODO: Select newly created person
+            // TODO: Scroll has a bug?
+            grid.scrollToEnd();
           });
-        }else {
-          this.localDB.put(this.selected).then(response => {
-            this.allDocs[this.selected.id].value.rev = response.rev;
-            this.allDocs[this.selected.id].id = response.id;
-            this.selected._rev = response.rev;
+        });
 
-            this.$.lazyGrid.refreshItems();
+        this.$.editor.addEventListener('on-find', evt => {
+          var value = evt.detail.value;
+          this.localDB.find({selector: {firstName: value}}).then(response => {
+            for(var r in response.docs) {
+              this.$.editor.searchResults =
+                  response.docs[r].firstName + ", "
+                  + response.docs[r].lastName + ", "
+                  + response.docs[r].email + "<br>";
+            }
           });
-        }
+        });
       },
 
       add: function() {
-        this.selected = {};
-        this.$.firstName.value = '';
-        this.$.lastName.value = '';
-        this.$.email.value = '';
-        this.isUpdate = false;
-      },
-
-      find : function() {
-        var q = this.$.search.value;
-
-        this.$.searchResultsArea.innerHTML = "<h3>Results</h3><hr>";
-        this.localDB.find({selector: {firstName: q}}).then(response => {
-          for(var r in response.docs) {
-            this.$.searchResultsArea.innerHTML +=
-                response.docs[r].firstName + ", "
-                + response.docs[r].lastName + ", "
-                + response.docs[r].email + "<br>";
-          }
-        });
+        this.$.editor.person = {};
       },
 
     });

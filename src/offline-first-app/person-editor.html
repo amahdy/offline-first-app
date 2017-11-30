@@ -1,0 +1,118 @@
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+
+<dom-module id="person-editor">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      #searchArea {
+        padding-top: 120px;
+      }
+
+      #searchResultsArea {
+        padding-top: 60px;
+      }
+
+      paper-button.update-button {
+        margin-top: 12px;
+        margin-right: 0px;
+        float: right;
+        background-color: #00b4f0;
+        color: white;
+      }
+
+      paper-button.find-button {
+        margin-top: 12px;
+        margin-right: 0px;
+        float: right;
+        background-color: #34373b;
+        color: white;
+      }
+    </style>
+
+    <h3>Editor</h3>
+    <paper-input label="First Name" id="firstName"></paper-input>
+    <paper-input label="Last Name" id="lastName"></paper-input>
+    <paper-input label="E-Mail" id="email"></paper-input>
+    <paper-button class="update-button" hidden$="{{!isUpdate}}" raised on-tap="update">Update</paper-button>
+    <paper-button class="update-button" hidden$="{{isUpdate}}" raised on-tap="update">Create</paper-button>
+
+    <div id="searchArea">
+      <h3>Search</h3>
+      <paper-input label="First Name" id="search"></paper-input>
+      <paper-button class="find-button" raised on-tap="find">Find</paper-button>
+    </div>
+
+    <div id="searchResultsArea"></div>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'person-editor',
+
+      properties: {
+        person: {
+          type: Object,
+          value: {},
+          observer: '_personChanged'
+        },
+
+        isUpdate: {
+          type: Boolean,
+          value: false
+        },
+
+        searchResults: {
+          type: Object,
+          value: {},
+          observer: '_searchChanged'
+        },
+      },
+
+      _personChanged: function() {
+        if(Object.keys(this.person).length) {
+          this.$.firstName.value = this.person.firstName;
+          this.$.lastName.value = this.person.lastName;
+          this.$.email.value = this.person.email;
+          this.isUpdate = true;
+        }else {
+          this.$.firstName.value = '';
+          this.$.lastName.value = '';
+          this.$.email.value = '';
+          this.isUpdate = false;
+        }
+      },
+
+      _searchChanged: function() {
+        window.ee = this.searchResults;
+        if(Object.keys(this.searchResults).length) {
+          this.$.searchResultsArea.innerHTML += this.searchResults;
+        }
+      },
+
+      update: function() {
+        this.person.firstName = this.$.firstName.value;
+        this.person.lastName = this.$.lastName.value;
+        this.person.email = this.$.email.value;
+
+        if(!this.isUpdate) { /* For create case*/
+          this.fire('on-create', {newPerson: this.person});
+        }else {
+          this.fire('on-update', {newPerson: this.person});
+        }
+      },
+
+      find : function() {
+        this.$.searchResultsArea.innerHTML = "<h3>Results</h3><hr>";
+        this.fire('on-find', {value: this.$.search.value});
+      },
+
+    });
+  </script>
+</dom-module>
