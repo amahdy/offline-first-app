@@ -129,36 +129,16 @@
         allDocs: Array, // All docs in the grid.
       },
 
-      ready: function() {
-
+      _loadData: function() {
         PouchDB.sync(this.remoteDB, this.localDB, {
           live: true,
           retry: true,
         });
 
-        this.localDB.createIndex({
-          index: {
-            fields: ['firstName'],
-          }
-        });
-
-        var grid = this.$.lazyGrid;
-
-        grid.columns = [
-          { name: '#', width: 70},
-          { name: 'firstName' },
-          { name: 'lastName' },
-          { name: 'email' },
-        ];
-
-        grid.columns[0].renderer = function(cell) {
-          cell.element.textContent = cell.row.index;
-        };
-
         this.localDB.allDocs().then(result => {
           this.allDocs = result.rows;
 
-          grid.items = (params, callback) => {
+          this.$.lazyGrid.items = (params, callback) => {
 
             // Construct docs starting from current index,
             // and up to the requested length by Grid.
@@ -186,6 +166,40 @@
             }
           }
         });
+
+        this.localDB.createIndex({
+          index: {
+            fields: ['firstName'],
+          }
+        });
+      },
+
+      ready: function() {
+        // For first visit, we must replicate first
+        this.localDB.info().then(localdbinfo => {
+          if(localdbinfo.doc_count === 0) {
+            // TODO: Handle error
+            // TODO: Do this in the background and display already loaded data
+            PouchDB.replicate(this.remoteDB, this.localDB).on('complete', info => {
+              this._loadData();
+            });
+          }else {
+            this._loadData();
+          }
+        });
+
+        var grid = this.$.lazyGrid;
+
+        grid.columns = [
+          { name: '#', width: 70},
+          { name: 'firstName' },
+          { name: 'lastName' },
+          { name: 'email' },
+        ];
+
+        grid.columns[0].renderer = function(cell) {
+          cell.element.textContent = cell.row.index;
+        };
 
         grid.addEventListener('selected-items-changed', () =>
           grid.selection.selected(idx => {
