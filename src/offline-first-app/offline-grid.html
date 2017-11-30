@@ -4,6 +4,8 @@
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 
 <dom-module id="offline-grid">
   <template>
@@ -11,9 +13,22 @@
       :host {
         display: block;
       }
+
+      #lazyGrid {
+        height: 100%;
+      }
+
+      paper-fab.add-button {
+        float: right;
+        background-color: #00b4f0;
+        color: white;
+        right: 50px;
+        bottom: 100px;
+      }
     </style>
 
     <vaadin-grid id="lazyGrid"></vaadin-grid>
+    <paper-fab class="add-button" on-tap="add" icon="add"></paper-fab>
   </template>
 
   <script>
@@ -154,6 +169,10 @@
                 + response.docs[r].email + "<br>";
           }
         });
+      },
+
+      add: function() {
+        this.fire('on-add');
       },
 
     });
