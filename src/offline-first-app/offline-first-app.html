@@ -9,6 +9,7 @@
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 
 <link rel="import" href="./person-editor.html">
+<link rel="import" href="./person-search.html">
 
 <dom-module id="offline-first-app">
   <template>
@@ -37,6 +38,10 @@
         position: relative;
       }
 
+      #search {
+        padding-top: 120px;
+      }
+
       paper-fab.add-button {
         margin-top: 12px;
         margin-right: 0px;
@@ -59,7 +64,10 @@
         <paper-fab class="add-button" on-tap="add" icon="add"></paper-fab>
       </div>
 
-      <person-editor id="editor" person$="{{selected}}"></person-editor>
+      <div id="editor">
+        <person-editor person$="{{selected}}"></person-editor>
+        <person-search id="search"></person-search>
+      </div>
     </vaadin-split-layout>
   </template>
 
@@ -199,11 +207,11 @@
           });
         });
 
-        this.$.editor.addEventListener('on-find', evt => {
+        this.$.search.addEventListener('on-find', evt => {
           var value = evt.detail.value;
           this.localDB.find({selector: {firstName: value}}).then(response => {
             for(var r in response.docs) {
-              this.$.editor.searchResults =
+              this.$.search.searchResults =
                   response.docs[r].firstName + ", "
                   + response.docs[r].lastName + ", "
                   + response.docs[r].email + "<br>";

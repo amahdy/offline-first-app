@@ -1,0 +1,59 @@
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+
+<dom-module id="person-search">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      #searchResultsArea {
+        padding-top: 60px;
+      }
+
+      paper-button.find-button {
+        margin-top: 12px;
+        margin-right: 0px;
+        float: right;
+        background-color: #34373b;
+        color: white;
+      }
+    </style>
+
+    <h3>Search</h3>
+    <paper-input label="First Name" id="search"></paper-input>
+    <paper-button class="find-button" raised on-tap="find">Find</paper-button>
+
+    <div id="searchResultsArea"></div>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'person-search',
+
+      properties: {
+        searchResults: {
+          type: Object,
+          value: {},
+          observer: '_searchChanged'
+        },
+      },
+
+      _searchChanged: function() {
+        if(Object.keys(this.searchResults).length) {
+          this.$.searchResultsArea.innerHTML += this.searchResults;
+        }
+      },
+
+      find : function() {
+        this.$.searchResultsArea.innerHTML = "<h3>Results</h3><hr>";
+        this.fire('on-find', {value: this.$.search.value});
+      },
+
+    });
+  </script>
+</dom-module>
