@@ -3,11 +3,11 @@
 <script src="../../bower_components/pouchdb-find/dist/pouchdb.find.min.js"></script>
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
-<link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../../bower_components/vaadin-split-layout/vaadin-split-layout.html">
 <link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 
+<link rel="import" href="./offline-grid.html">
 <link rel="import" href="./person-editor.html">
 <link rel="import" href="./person-search.html">
 
@@ -22,7 +22,7 @@
         height: 100%;
       }
 
-      #lazyGrid {
+      #offlineGrid {
         height: 100%;
       }
 
@@ -39,7 +39,7 @@
       }
 
       #search {
-        padding-top: 120px;
+        margin: 8px;
       }
 
       paper-fab.add-button {
@@ -48,10 +48,6 @@
         float: right;
         background-color: #00b4f0;
         color: white;
-        /*position: absolute;
-        top: 0;
-        right: 0;*/
-
         position: fixed;
         right: 27%;
         bottom: 30px;
@@ -60,14 +56,13 @@
 
     <vaadin-split-layout id="topLayout">
       <div id="gridArea">
-        <vaadin-grid id="lazyGrid"></vaadin-grid>
+        <person-search id="search"></person-search>
+        <offline-grid id="offlineGrid"></offline-grid>
         <paper-fab class="add-button" on-tap="add" icon="add"></paper-fab>
       </div>
 
-      <div id="editor">
-        <person-editor person$="{{selected}}"></person-editor>
-        <person-search id="search"></person-search>
-      </div>
+      <person-editor id="editor" person$="{{selected}}"></person-editor>
+
     </vaadin-split-layout>
   </template>
 
@@ -76,147 +71,22 @@
 
       is: 'offline-first-app',
 
-      properties: {
-        // Remote DB, running on a local instance of CouchDB.
-        remoteDB: {
-          type: PouchDB,
-          value: new PouchDB('http://localhost:5984/personsdb'),
-        },
-
-        // Local DB, the synched version of `remoteDB`
-        localDB: {
-          type: PouchDB,
-          value: new PouchDB('local_personsdb'),
-        },
-
-        selected: {
-          type: Object,
-          value: {},
-        },// The selected object in the grid.
-        allDocs: Array, // All docs in the grid.
-      },
-
-      _loadData: function() {
-        PouchDB.sync(this.remoteDB, this.localDB, {
-          live: true,
-          retry: true,
-        });
-
-        this.localDB.allDocs({
-          include_docs: true, endkey: "_design"}).then(result => {
-          this.allDocs = result.rows;
-
-          this.$.lazyGrid.items = (params, callback) => {
-
-            // Construct docs starting from current index,
-            // and up to the requested length by Grid.
-            var currentDocs = [];
-            var currentIndex = params.index;
-            for(var i=currentIndex; i<currentIndex+params.count; i++) {
-              currentDocs[i-currentIndex] = {
-                id: this.allDocs[i].id,
-                rev: this.allDocs[i].value.rev,
-              };
-            }
-
-            var data = [];
-            if(currentDocs.length > 0) {
-              this.localDB.bulkGet({
-                  docs: currentDocs,
-              }).then(json => {
-                for(var i=0; i<json.results.length; i++) {
-                  data[i] = json.results[i].docs[0].ok;
-                }
-                callback(data, this.allDocs.length);
-              });
-            }else {
-              callback(data, this.allDocs.length);
-            }
-          }
-        });
-
-        this.localDB.createIndex({
-          index: {
-            fields: ['firstName'],
-          }
-        });
-      },
-
       ready: function() {
-        // For first visit, we must replicate first
-        this.localDB.info().then(localdbinfo => {
-          if(localdbinfo.doc_count === 0) {
-            // TODO: Handle error
-            // TODO: Do this in the background and display already loaded data
-            PouchDB.replicate(this.remoteDB, this.localDB).on('complete', info => {
-              this._loadData();
-            });
-          }else {
-            this._loadData();
-          }
+        this.$.offlineGrid.addEventListener('on-select', evt => {
+          // TODO: Grid looses focus so need to refresh selection
+          this.$.editor.person = evt.detail.selected;
         });
-
-        var grid = this.$.lazyGrid;
-
-        grid.columns = [
-          { name: '#', width: 70},
-          { name: 'firstName' },
-          { name: 'lastName' },
-          { name: 'email' },
-        ];
-
-        grid.columns[0].renderer = function(cell) {
-          cell.element.textContent = cell.row.index;
-        };
-
-        grid.addEventListener('selected-items-changed', () =>
-          grid.selection.selected(idx => {
-            grid.getItem(idx, (err, response) => this.selected = response);
-            this.selected.id = idx; // This adds extra value in DB
-            // TODO: Grid looses focus so need to refresh selection
-            this.$.editor.person = this.selected;
-          })
-        );
 
         this.$.editor.addEventListener('on-update', evt => {
-          var newPerson = evt.detail.newPerson;
-          this.localDB.put(newPerson).then(response => {
-            this.allDocs[newPerson.id].value.rev = response.rev;
-            this.allDocs[newPerson.id].id = response.id;
-            this.selected._rev = response.rev;
-
-            grid.refreshItems();
-          });
+          this.$.offlineGrid.update(evt.detail.newPerson);
         });
 
         this.$.editor.addEventListener('on-create', evt => {
-          var newPerson = evt.detail.newPerson;
-          this.localDB.post(newPerson).then(response => {
-            this.allDocs[this.allDocs.length] = {
-              value: {
-                rev: response.rev
-              },
-              id: response.id
-            }
-            // this.selected._rev = response.rev;
-
-            grid.refreshItems();
-            // TODO: Select newly created person
-            // TODO: Scroll has a bug?
-            grid.scrollToEnd();
-          });
+          this.$.offlineGrid.create(evt.detail.newPerson);
         });
 
         this.$.search.addEventListener('on-find', evt => {
-          var value = evt.detail.value;
-          this.localDB.find({selector: {firstName: value}}).then(response => {
-            for(var r in response.docs) {
-              this.$.search.searchResults =
-                  response.docs[r].firstName + ", "
-                  + response.docs[r].lastName + ", "
-                  + response.docs[r].email + "<br>";
-            }
-          });
+          this.$.offlineGrid.search(evt.detail.value);
         });
       },
 

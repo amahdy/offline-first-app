@@ -1,0 +1,161 @@
+
+<script src="../../bower_components/pouchdb/dist/pouchdb.min.js"></script>
+<script src="../../bower_components/pouchdb-find/dist/pouchdb.find.min.js"></script>
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
+
+<dom-module id="offline-grid">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+
+    <vaadin-grid id="lazyGrid"></vaadin-grid>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'offline-grid',
+
+      properties: {
+        // Remote DB, running on a local instance of CouchDB.
+        remoteDB: {
+          type: PouchDB,
+          value: new PouchDB('http://localhost:5984/personsdb'),
+        },
+
+        // Local DB, the synched version of `remoteDB`
+        localDB: {
+          type: PouchDB,
+          value: new PouchDB('local_personsdb'),
+        },
+
+        allDocs: Array, // All docs in the grid.
+      },
+
+      _loadData: function() {
+        PouchDB.sync(this.remoteDB, this.localDB, {
+          live: true,
+          retry: true,
+        });
+
+        this.localDB.allDocs({
+          include_docs: true, endkey: "_design"}).then(result => {
+          this.allDocs = result.rows;
+
+          this.$.lazyGrid.items = (params, callback) => {
+
+            // Construct docs starting from current index,
+            // and up to the requested length by Grid.
+            var currentDocs = [];
+            var currentIndex = params.index;
+            for(var i=currentIndex; i<currentIndex+params.count; i++) {
+              currentDocs[i-currentIndex] = {
+                id: this.allDocs[i].id,
+                rev: this.allDocs[i].value.rev,
+              };
+            }
+
+            var data = [];
+            if(currentDocs.length > 0) {
+              this.localDB.bulkGet({
+                  docs: currentDocs,
+              }).then(json => {
+                for(var i=0; i<json.results.length; i++) {
+                  data[i] = json.results[i].docs[0].ok;
+                }
+                callback(data, this.allDocs.length);
+              });
+            }else {
+              callback(data, this.allDocs.length);
+            }
+          }
+        });
+
+        this.localDB.createIndex({
+          index: {
+            fields: ['firstName'],
+          }
+        });
+      },
+
+      ready: function() {
+        // For first visit, we must replicate first
+        this.localDB.info().then(localdbinfo => {
+          if(localdbinfo.doc_count === 0) {
+            // TODO: Handle error
+            // TODO: Do this in the background and display already loaded data
+            PouchDB.replicate(this.remoteDB, this.localDB).on('complete', info => {
+              this._loadData();
+            });
+          }else {
+            this._loadData();
+          }
+        });
+
+        var grid = this.$.lazyGrid;
+
+        grid.columns = [
+          { name: '#', width: 70},
+          { name: 'firstName' },
+          { name: 'lastName' },
+          { name: 'email' },
+        ];
+
+        grid.columns[0].renderer = function(cell) {
+          cell.element.textContent = cell.row.index;
+        };
+
+        grid.addEventListener('selected-items-changed', () =>
+          grid.selection.selected(idx => {
+            grid.getItem(idx, (err, response) => selected = response);
+            selected.id = idx; // This adds extra value in DB
+            this.fire('on-select', {selected: selected});
+          })
+        );
+      },
+
+      update: function(newPerson) {
+        this.localDB.put(newPerson).then(response => {
+          this.allDocs[newPerson.id].value.rev = response.rev;
+          this.allDocs[newPerson.id].id = response.id;
+          this.allDocs[newPerson.id]._rev = response.rev;
+
+          this.$.lazyGrid.refreshItems();
+        });
+      },
+
+      create: function(newPerson) {
+        this.localDB.post(newPerson).then(response => {
+          this.allDocs[this.allDocs.length] = {
+            value: {
+              rev: response.rev
+            },
+            id: response.id
+          }
+
+          this.$.lazyGrid.refreshItems();
+          // TODO: Select newly created person
+          // TODO: Scroll has a bug?
+          this.$.lazyGrid.scrollToEnd();
+        });
+      },
+
+      search: function(value) {
+        this.localDB.find({selector: {firstName: value}}).then(response => {
+          for(var r in response.docs) {
+            this.searchResults +=
+                response.docs[r].firstName + ", "
+                + response.docs[r].lastName + ", "
+                + response.docs[r].email + "<br>";
+          }
+        });
+      },
+
+    });
+  </script>
+</dom-module>
