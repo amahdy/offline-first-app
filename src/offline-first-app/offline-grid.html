@@ -4,6 +4,7 @@
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-grid.html">
 <link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 
@@ -16,20 +17,51 @@
 
       #lazyGrid {
         height: 100%;
+        width: 100%;
       }
 
       paper-fab.add-button {
-        float: right;
         background-color: #00b4f0;
         color: white;
-        position: sticky;
+        position: absolute;
         right: 50px;
         bottom: 50px;
       }
     </style>
 
-    <vaadin-grid id="lazyGrid"></vaadin-grid>
-    <paper-fab class="add-button" on-tap="add" icon="add"></paper-fab>
+    <vaadin-grid id="lazyGrid"
+                 aria-label="Offline Grid"
+                 data-provider="[[dataProvider]]"
+                 active-item="{{activeItem}}"
+                 size="[[allDocs.length]]">
+
+      <vaadin-grid-column width="70px" flex-grow="0">
+        <template class="header">#</template>
+        <template>[[index]]</template>
+      </vaadin-grid-column>
+
+      <vaadin-grid-column>
+        <template class="header">Name</template>
+        <template>[[item.firstName]] [[item.lastName]]</template>
+      </vaadin-grid-column>
+
+      <vaadin-grid-column>
+        <template class="header">Phone</template>
+        <template>[[item.address.phone]]</template>
+      </vaadin-grid-column>
+
+      <vaadin-grid-column width="150px">
+        <template class="header">Address</template>
+        <template>
+          <p style="white-space: normal">[[item.address.street]], [[item.address.city]]</p>
+        </template>
+      </vaadin-grid-column>
+
+    </vaadin-grid>
+
+    <div style="position:relative">
+      <paper-fab class="add-button" on-tap="add" icon="add"></paper-fab>
+    </div>
   </template>
 
   <script>
@@ -38,6 +70,10 @@
       is: 'offline-grid',
 
       properties: {
+        activeItem: {
+          observer: '_activeItemChanged',
+        },
+
         // Remote DB, running on a local instance of CouchDB.
         remoteDB: {
           type: PouchDB,
@@ -53,23 +89,26 @@
         allDocs: Array, // All docs in the grid.
       },
 
+      _activeItemChanged: function(selectedItem) {
+        this.fire('on-select', {selected: selectedItem});
+      },
+
       _loadData: function() {
         PouchDB.sync(this.remoteDB, this.localDB, {
           live: true,
           retry: true,
         });
 
-        this.localDB.allDocs({
-          include_docs: true, endkey: "_design"}).then(result => {
+        this.localDB.allDocs({endkey: "_design"}).then(result => {
           this.allDocs = result.rows;
 
-          this.$.lazyGrid.items = (params, callback) => {
+          this.dataProvider = (params, callback) => {
 
             // Construct docs starting from current index,
             // and up to the requested length by Grid.
             var currentDocs = [];
-            var currentIndex = params.index;
-            for(var i=currentIndex; i<currentIndex+params.count; i++) {
+            var currentIndex = params.page;
+            for(var i=currentIndex; i<currentIndex+params.pageSize; i++) {
               currentDocs[i-currentIndex] = {
                 id: this.allDocs[i].id,
                 rev: this.allDocs[i].value.rev,
@@ -83,11 +122,12 @@
               }).then(json => {
                 for(var i=0; i<json.results.length; i++) {
                   data[i] = json.results[i].docs[0].ok;
+                  data[i].idx = i + currentIndex;
                 }
-                callback(data, this.allDocs.length);
+                callback(data);
               });
             }else {
-              callback(data, this.allDocs.length);
+              callback(data);
             }
           }
         });
@@ -112,36 +152,14 @@
             this._loadData();
           }
         });
-
-        var grid = this.$.lazyGrid;
-
-        grid.columns = [
-          { name: '#', width: 70},
-          { name: 'firstName' },
-          { name: 'lastName' },
-          { name: 'email' },
-        ];
-
-        grid.columns[0].renderer = function(cell) {
-          cell.element.textContent = cell.row.index;
-        };
-
-        grid.addEventListener('selected-items-changed', () =>
-          grid.selection.selected(idx => {
-            grid.getItem(idx, (err, response) => selected = response);
-            selected.id = idx; // This adds extra value in DB
-            this.fire('on-select', {selected: selected});
-          })
-        );
       },
 
       update: function(newPerson) {
         this.localDB.put(newPerson).then(response => {
-          this.allDocs[newPerson.id].value.rev = response.rev;
-          this.allDocs[newPerson.id].id = response.id;
-          this.allDocs[newPerson.id]._rev = response.rev;
+          this.allDocs[newPerson.idx].value.rev = response.rev;
+          this.allDocs[newPerson.idx].id = response.id;
 
-          this.$.lazyGrid.refreshItems();
+          this.$.lazyGrid.clearCache();
         });
       },
 
@@ -154,7 +172,7 @@
             id: response.id
           }
 
-          this.$.lazyGrid.refreshItems();
+          this.$.lazyGrid.clearCache();
           // TODO: Select newly created person
           // TODO: Scroll has a bug?
           this.$.lazyGrid.scrollToEnd();
