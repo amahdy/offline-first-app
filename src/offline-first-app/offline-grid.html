@@ -85,6 +85,7 @@
       },
 
       _activeItemChanged: function(selectedItem) {
+        this.$.lazyGrid.selectedItems = selectedItem ? [selectedItem] : [];
         this.fire('on-select', {selected: selectedItem});
       },
 
