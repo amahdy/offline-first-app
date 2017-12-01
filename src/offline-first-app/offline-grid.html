@@ -35,11 +35,6 @@
                  active-item="{{activeItem}}"
                  size="[[allDocs.length]]">
 
-      <vaadin-grid-column width="70px" flex-grow="0">
-        <template class="header">#</template>
-        <template>[[index]]</template>
-      </vaadin-grid-column>
-
       <vaadin-grid-column>
         <template class="header">Name</template>
         <template>[[item.firstName]] [[item.lastName]]</template>
