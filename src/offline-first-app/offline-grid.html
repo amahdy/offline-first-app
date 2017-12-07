@@ -156,12 +156,16 @@
           this.allDocs[newPerson.idx].id = response.id;
 
           this.$.lazyGrid.clearCache();
+          // TODO: doesn't work
+          this.$.lazyGrid.selectItem(newPerson);
         });
       },
 
       create: function(newPerson) {
+        // FIXME: Grid need restart to show the new item
+        newPerson.idx = this.allDocs.length;
         this.localDB.post(newPerson).then(response => {
-          this.allDocs[this.allDocs.length] = {
+          this.allDocs[newPerson.idx] = {
             value: {
               rev: response.rev
             },
@@ -169,9 +173,8 @@
           }
 
           this.$.lazyGrid.clearCache();
-          // TODO: Select newly created person
-          // TODO: Scroll has a bug?
-          this.$.lazyGrid.scrollToEnd();
+          // TODO: doesn't work
+          this.$.lazyGrid.selectItem(newPerson);
         });
       },
 
