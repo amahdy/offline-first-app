@@ -91,6 +91,12 @@
         this.fire('on-select', {selected: selectedItem});
       },
 
+      _refreshGrid: function(selectionId) {
+        this.selectedId = selectionId;
+        this.$.lazyGrid.clearCache();
+        this.$.lazyGrid.$.scroller.scrollToScaledIndex(selectionId)
+      },
+
       _loadData: function() {
         PouchDB.sync(this.remoteDB, this.localDB, {
           live: true,
@@ -160,25 +166,20 @@
         this.localDB.put(newPerson).then(response => {
           this.allDocs[newPerson.idx].value.rev = response.rev;
           this.allDocs[newPerson.idx].id = response.id;
-          this.selectedId = newPerson.idx;
-
-          this.$.lazyGrid.clearCache();
+          this._refreshGrid(newPerson.idx);
         });
       },
 
       create: function(newPerson) {
-        // FIXME: Grid need restart to show the new item
-        var newIdx = this.allDocs.length;
         this.localDB.post(newPerson).then(response => {
-          this.allDocs[newIdx] = {
+          // Insert in the begining
+          this.allDocs.unshift({
             value: {
               rev: response.rev
             },
             id: response.id
-          }
-          this.selectedId = newIdx;
-
-          this.$.lazyGrid.clearCache();
+          });
+          this._refreshGrid(0);
         });
       },
 
