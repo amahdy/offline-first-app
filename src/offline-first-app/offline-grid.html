@@ -6,10 +6,11 @@
 <link rel="import" href="../../bower_components/polymer/lib/elements/dom-if.html">
 
 <link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-grid.html">
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-button.html">
+<link rel="import" href="../../bower_components/vaadin-icons/vaadin-icons.html">
 
 <link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
-<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
-<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/vaadin-button/vaadin-button.html">
 
 <dom-module id="search-highlight">
   <template>
@@ -52,12 +53,12 @@
         display: inline;
       }
 
-      paper-fab.add-button {
-        background-color: #00b4f0;
-        color: white;
+      .add-button {
         position: absolute;
-        right: 50px;
-        bottom: 50px;
+        right: 20px;
+        bottom: 20px;
+        border-radius: 50%;
+        font-size: 12px;
       }
     </style>
 
@@ -67,7 +68,7 @@
                  active-item="{{activeItem}}"
                  size="[[size]]">
 
-      <vaadin-grid-column>
+      <vaadin-grid-column width="250px" flex-grow="0">
         <template class="header">Name</template>
         <template>
           <span class="grid-cell">
@@ -87,7 +88,7 @@
         </template>
       </vaadin-grid-column>
 
-      <vaadin-grid-column>
+      <vaadin-grid-column width="150px" flex-grow="0">
         <template class="header">Phone</template>
         <template>
           <span class="grid-cell">
@@ -101,7 +102,7 @@
         </template>
       </vaadin-grid-column>
 
-      <vaadin-grid-column width="150px">
+      <vaadin-grid-column flex-grow="1">
         <template class="header">Address</template>
         <template>
           <span class="grid-cell">
@@ -127,7 +128,9 @@
     </vaadin-grid>
 
     <div style="position:relative">
-      <paper-fab class="add-button" on-tap="add" icon="add"></paper-fab>
+      <vaadin-button class="add-button" on-tap="add" theme="icon primary">
+          <iron-icon icon="vaadin:plus"></iron-icon>
+      </vaadin-button>
     </div>
   </template>
 
