@@ -103,41 +103,44 @@
           retry: true,
         });
 
-        this.localDB.allDocs({endkey: "_design"}).then(result => {
-          this.allDocs = result.rows;
+        // TODO: Sort items, but this is server-side issue
+        this.localDB.allDocs({endkey: '_design'}).then(eResult => {
+          this.localDB.allDocs({startkey: '_design\uffff'}).then(sResult => {
+            this.allDocs = eResult.rows.concat(sResult.rows);
 
-          this.dataProvider = (params, callback) => {
+            this.dataProvider = (params, callback) => {
 
-            // Construct docs starting from current index,
-            // and up to the requested length by Grid.
-            var currentDocs = [];
-            var currentIndex = params.page;
-            for(var i=currentIndex; i<currentIndex+params.pageSize; i++) {
-              currentDocs[i-currentIndex] = {
-                id: this.allDocs[i].id,
-                rev: this.allDocs[i].value.rev,
-              };
-            }
+              // Construct docs starting from current index,
+              // and up to the requested length by Grid.
+              var currentDocs = [];
+              var currentIndex = params.page;
+              for(var i=currentIndex; i<currentIndex+params.pageSize; i++) {
+                currentDocs[i-currentIndex] = {
+                  id: this.allDocs[i].id,
+                  rev: this.allDocs[i].value.rev,
+                };
+              }
 
-            var data = [];
-            if(currentDocs.length > 0) {
-              this.localDB.bulkGet({
-                  docs: currentDocs,
-              }).then(json => {
-                for(var i=0; i<json.results.length; i++) {
-                  data[i] = json.results[i].docs[0].ok;
-                  data[i].idx = i + currentIndex;
-                  // Reselect previously selected item (if any).
-                  if(this.selectedId == data[i].idx) {
-                    this._activeItemChanged(data[i]);
+              var data = [];
+              if(currentDocs.length > 0) {
+                this.localDB.bulkGet({
+                    docs: currentDocs,
+                }).then(json => {
+                  for(var i=0; i<json.results.length; i++) {
+                    data[i] = json.results[i].docs[0].ok;
+                    data[i].idx = i + currentIndex;
+                    // Reselect previously selected item (if any).
+                    if(this.selectedId == data[i].idx) {
+                      this._activeItemChanged(data[i]);
+                    }
                   }
-                }
+                  callback(data);
+                });
+              }else {
                 callback(data);
-              });
-            }else {
-              callback(data);
+              }
             }
-          }
+          });
         });
 
         this.localDB.createIndex({
