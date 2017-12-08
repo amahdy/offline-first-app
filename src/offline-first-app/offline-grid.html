@@ -3,12 +3,38 @@
 <script src="../../bower_components/pouchdb-quick-search/dist/pouchdb.quick-search.min.js"></script>
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/polymer/lib/elements/dom-if.html">
 
 <link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-grid.html">
 
 <link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+
+<dom-module id="search-highlight">
+  <template>
+    <style>
+      .search-highlight {
+          background-color: yellow;
+      }
+    </style>
+    <span id="placeHolder"></span>
+  </template>
+  <script>
+    Polymer({
+      is: 'search-highlight',
+      properties: {
+        value: {
+          type: String,
+          observer: '_valueChanged'
+        }
+      },
+      _valueChanged: function (value) {
+        this.$.placeHolder.innerHTML = value;
+      }
+    });
+  </script>
+</dom-module>
 
 <dom-module id="offline-grid">
   <template>
@@ -20,6 +46,10 @@
       #lazyGrid {
         height: 100%;
         width: 100%;
+      }
+
+      .grid-cell {
+        display: inline;
       }
 
       paper-fab.add-button {
@@ -39,18 +69,58 @@
 
       <vaadin-grid-column>
         <template class="header">Name</template>
-        <template>[[item.firstName]] [[item.lastName]]</template>
+        <template>
+          <span class="grid-cell">
+            <template is="dom-if" if="[[item.highlight_firstName]]">
+              <search-highlight value="[[item.highlight_firstName]]"></search-highlight>
+            </template>
+            <template is="dom-if" if="[[!item.highlight_firstName]]">
+              [[item.firstName]]
+            </template>
+            <template is="dom-if" if="[[item.highlight_lastName]]">
+              <search-highlight value="[[item.highlight_lastName]]"></search-highlight>
+            </template>
+            <template is="dom-if" if="[[!item.highlight_lastName]]">
+              [[item.lastName]]
+            </template>
+          </span>
+        </template>
       </vaadin-grid-column>
 
       <vaadin-grid-column>
         <template class="header">Phone</template>
-        <template>[[item.address.phone]]</template>
+        <template>
+          <span class="grid-cell">
+            <template is="dom-if" if="[[item.highlight_address_phone]]">
+              <search-highlight value="[[item.highlight_address_phone]]"></search-highlight>
+            </template>
+            <template is="dom-if" if="[[!item.highlight_address_phone]]">
+              [[item.address.phone]]
+            </template>
+          </span>
+        </template>
       </vaadin-grid-column>
 
       <vaadin-grid-column width="150px">
         <template class="header">Address</template>
         <template>
-          <p style="white-space: normal">[[item.address.street]], [[item.address.city]]</p>
+          <span class="grid-cell">
+            <template is="dom-if" if="[[item.highlight_address_street]]">
+              <search-highlight value="[[item.highlight_address_street]]"></search-highlight>
+            </template>
+            <template is="dom-if" if="[[!item.highlight_address_street]]">
+              [[item.address.street]]
+            </template>
+            <template is="dom-if" if="[[item.address.city]]">
+              ,
+            </template>
+            <template is="dom-if" if="[[item.highlight_address_city]]">
+              <search-highlight value="[[item.highlight_address_city]]"></search-highlight>
+            </template>
+            <template is="dom-if" if="[[!item.highlight_address_city]]">
+              [[item.address.city]]
+            </template>
+          </span>
         </template>
       </vaadin-grid-column>
 
@@ -133,12 +203,17 @@
                     data[i] = json.results[i].docs[0].ok;
                     data[i].idx = i + currentIndex;
 
-                    // TODO: Should use auto renderer instead
-                    // TODO: Render HTML in cells
                     // Hilight docs in search mode
                     if(this.searchResults && currentDocs[i].highlighting) {
                       for (prop in currentDocs[i].highlighting) {
-                        data[i][prop] = currentDocs[i].highlighting[prop];
+                        var highlightKey = 'highlight_' + prop.replace('.', '_');
+                        data[i][highlightKey] = currentDocs[i].highlighting[prop];
+                      }
+                    }else {
+                      for(prop in data[i]) {
+                        if(prop.startsWith('highlight_')) {
+                          delete data[i][prop];
+                        }
                       }
                     }
 
@@ -206,7 +281,9 @@
                     'address.phone',
                     'address.email'
                     ],
-            highlighting: true
+            highlighting: true,
+            highlighting_pre: '<span class="search-highlight">',
+            highlighting_post: '</span>'
           }).then(response => {
             this.searchResults = response.rows;
             this.size = response.total_rows;
