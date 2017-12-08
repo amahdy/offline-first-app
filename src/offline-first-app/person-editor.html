@@ -51,7 +51,7 @@
       },
 
       _personChanged: function() {
-        if(Object.keys(this.person).length) {
+        if(this.person && Object.keys(this.person).length) {
           this.$.firstName.value = this.person.firstName;
           this.$.lastName.value = this.person.lastName;
           this.$.email.value = this.person.email;
