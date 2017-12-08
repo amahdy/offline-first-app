@@ -23,10 +23,9 @@
       }
     </style>
 
-    <paper-input label="First Name" id="search"></paper-input>
+    <paper-input label="Search.." id="search"></paper-input>
     <paper-button class="find-button" raised on-tap="find">Find</paper-button>
-
-    <div id="searchResultsArea"></div>
+    <paper-button class="find-button" raised on-tap="clear">Clear</paper-button>
   </template>
 
   <script>
@@ -34,23 +33,13 @@
 
       is: 'person-search',
 
-      properties: {
-        searchResults: {
-          type: Object,
-          value: {},
-          observer: '_searchChanged'
-        },
-      },
-
-      _searchChanged: function() {
-        if(Object.keys(this.searchResults).length) {
-          this.$.searchResultsArea.innerHTML += this.searchResults;
-        }
-      },
-
       find : function() {
-        this.$.searchResultsArea.innerHTML = "<h3>Results</h3><hr>";
         this.fire('on-find', {value: this.$.search.value});
+      },
+
+      clear : function() {
+        this.$.search.value = '';
+        this.find();
       },
 
     });

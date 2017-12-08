@@ -1,10 +1,12 @@
 
 <script src="../../bower_components/pouchdb/dist/pouchdb.min.js"></script>
-<script src="../../bower_components/pouchdb-find/dist/pouchdb.find.min.js"></script>
+<script src="../../bower_components/pouchdb-quick-search/dist/pouchdb.quick-search.min.js"></script>
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
-<link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
+
 <link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-grid.html">
+
+<link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 
@@ -33,7 +35,7 @@
                  aria-label="Offline Grid"
                  data-provider="[[dataProvider]]"
                  active-item="{{activeItem}}"
-                 size="[[allDocs.length]]">
+                 size="[[size]]">
 
       <vaadin-grid-column>
         <template class="header">Name</template>
@@ -83,7 +85,11 @@
 
         allDocs: Array, // All docs in the grid.
 
+        size: Number, // Size of total rows in the grid.
+
         selectedId: Number, // ID of currently selected item.
+
+        searchResults: Array, // Filter grid based on those results.
       },
 
       _activeItemChanged: function(selectedItem) {
@@ -107,19 +113,16 @@
         this.localDB.allDocs({endkey: '_design'}).then(eResult => {
           this.localDB.allDocs({startkey: '_design\uffff'}).then(sResult => {
             this.allDocs = eResult.rows.concat(sResult.rows);
+            this.size = this.allDocs.length;
 
             this.dataProvider = (params, callback) => {
 
+              var currentIndex = params.page;
+              var usedDocs = this.searchResults ? this.searchResults : this.allDocs;
+
               // Construct docs starting from current index,
               // and up to the requested length by Grid.
-              var currentDocs = [];
-              var currentIndex = params.page;
-              for(var i=currentIndex; i<currentIndex+params.pageSize; i++) {
-                currentDocs[i-currentIndex] = {
-                  id: this.allDocs[i].id,
-                  rev: this.allDocs[i].value.rev,
-                };
-              }
+              var currentDocs = usedDocs.slice(currentIndex, currentIndex+params.pageSize);
 
               var data = [];
               if(currentDocs.length > 0) {
@@ -129,6 +132,16 @@
                   for(var i=0; i<json.results.length; i++) {
                     data[i] = json.results[i].docs[0].ok;
                     data[i].idx = i + currentIndex;
+
+                    // TODO: Should use auto renderer instead
+                    // TODO: Render HTML in cells
+                    // Hilight docs in search mode
+                    if(this.searchResults && currentDocs[i].highlighting) {
+                      for (prop in currentDocs[i].highlighting) {
+                        data[i][prop] = currentDocs[i].highlighting[prop];
+                      }
+                    }
+
                     // Reselect previously selected item (if any).
                     if(this.selectedId == data[i].idx) {
                       this._activeItemChanged(data[i]);
@@ -141,12 +154,6 @@
               }
             }
           });
-        });
-
-        this.localDB.createIndex({
-          index: {
-            fields: ['firstName'],
-          }
         });
       },
 
@@ -167,8 +174,6 @@
 
       update: function(newPerson) {
         this.localDB.put(newPerson).then(response => {
-          this.allDocs[newPerson.idx].value.rev = response.rev;
-          this.allDocs[newPerson.idx].id = response.id;
           this._refreshGrid(newPerson.idx);
         });
       },
@@ -177,24 +182,44 @@
         this.localDB.post(newPerson).then(response => {
           // Insert in the begining
           this.allDocs.unshift({
-            value: {
-              rev: response.rev
-            },
             id: response.id
           });
+          this.size = this.allDocs.length;
           this._refreshGrid(0);
         });
       },
 
       search: function(value) {
-        this.localDB.find({selector: {firstName: value}}).then(response => {
-          for(var r in response.docs) {
-            this.searchResults +=
-                response.docs[r].firstName + ", "
-                + response.docs[r].lastName + ", "
-                + response.docs[r].email + "<br>";
-          }
-        });
+        // Make sure to unselect any selected item
+        this._activeItemChanged(null);
+
+        if(value) {
+          this.localDB.search({
+            query: value,
+            fields: ['firstName',
+                    'lastName',
+                    'address.street',
+                    'address.city',
+                    'address.state',
+                    'address.zip',
+                    'address.country',
+                    'address.phone',
+                    'address.email'
+                    ],
+            highlighting: true
+          }).then(response => {
+            this.searchResults = response.rows;
+            this.size = response.total_rows;
+            this.$.lazyGrid.clearCache();
+          }).catch(function (err) {
+            // TODO: Handle error
+          });
+        }else {
+          // Clear search
+          this.searchResults = undefined;
+          this.size = this.allDocs.length;
+          this.$.lazyGrid.clearCache();
+        }
       },
 
       add: function() {
