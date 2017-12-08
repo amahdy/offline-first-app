@@ -1,7 +1,14 @@
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
-<link rel="import" href="../../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="../../bower_components/iron-a11y-keys/iron-a11y-keys.html">
+
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-button.html">
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-text-field.html">
+<link rel="import" href="../../bower_components/vaadin-icons/vaadin-icons.html">
+
+<link rel="import" href="../../bower_components/vaadin-button/vaadin-button.html">
+<link rel="import" href="../../bower_components/vaadin-text-field/vaadin-text-field.html">
 
 <dom-module id="person-search">
   <template>
@@ -10,22 +17,42 @@
         display: block;
       }
 
-      #searchResultsArea {
-        padding-top: 60px;
+      #topLayout {
+        display: flex;
+        flex-direction: row;
       }
 
-      paper-button.find-button {
-        margin-top: 12px;
-        margin-right: 0px;
-        float: right;
-        background-color: #34373b;
-        color: white;
+      #search {
+        flex: 2;
+      }
+
+      .clear-button {
+        color: red;
+        font-size: 10px;
+      }
+
+      .find-button {
+        font-size: 12px;
       }
     </style>
 
-    <paper-input label="Search.." id="search"></paper-input>
-    <paper-button class="find-button" raised on-tap="find">Find</paper-button>
-    <paper-button class="find-button" raised on-tap="clear">Clear</paper-button>
+    <div id="topLayout">
+      <vaadin-text-field autofocus placeholder="Search.." id="search" value="{{value}}">
+        <div slot="suffix">
+          <template is="dom-if" if="[[value]]">
+            <vaadin-button theme="icon x-small tertiary" class="clear-button" on-tap="clear">
+              <iron-icon icon="vaadin:close-circle-o"></iron-icon>
+            </vaadin-button>
+          </template>
+        </div>
+      </vaadin-text-field>
+      <vaadin-button theme="icon" class="find-button" on-tap="find">
+        <iron-icon icon="vaadin:search"></iron-icon>
+      </vaadin-button>
+    </div>
+
+    <iron-a11y-keys keys="enter" on-keys-pressed="find"></iron-a11y-keys>
+    <iron-a11y-keys keys="esc" on-keys-pressed="clear"></iron-a11y-keys>
   </template>
 
   <script>
