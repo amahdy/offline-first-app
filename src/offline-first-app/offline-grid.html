@@ -82,6 +82,8 @@
         },
 
         allDocs: Array, // All docs in the grid.
+
+        selectedId: Number, // ID of currently selected item.
       },
 
       _activeItemChanged: function(selectedItem) {
@@ -119,6 +121,10 @@
                 for(var i=0; i<json.results.length; i++) {
                   data[i] = json.results[i].docs[0].ok;
                   data[i].idx = i + currentIndex;
+                  // Reselect previously selected item (if any).
+                  if(this.selectedId == data[i].idx) {
+                    this.$.lazyGrid.selectItem(data[i]);
+                  }
                 }
                 callback(data);
               });
@@ -154,10 +160,9 @@
         this.localDB.put(newPerson).then(response => {
           this.allDocs[newPerson.idx].value.rev = response.rev;
           this.allDocs[newPerson.idx].id = response.id;
+          this.selectedId = newPerson.idx;
 
           this.$.lazyGrid.clearCache();
-          // TODO: doesn't work
-          this.$.lazyGrid.selectItem(newPerson);
         });
       },
 
@@ -171,10 +176,9 @@
             },
             id: response.id
           }
+          this.selectedId = newPerson.idx;
 
           this.$.lazyGrid.clearCache();
-          // TODO: doesn't work
-          this.$.lazyGrid.selectItem(newPerson);
         });
       },
 
@@ -190,6 +194,9 @@
       },
 
       add: function() {
+        // Clear selection first
+        this.$.lazyGrid.selectedItems = [];
+        this.selectedId = undefined;
         this.fire('on-add');
       },
 
