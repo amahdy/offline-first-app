@@ -123,7 +123,7 @@
                   data[i].idx = i + currentIndex;
                   // Reselect previously selected item (if any).
                   if(this.selectedId == data[i].idx) {
-                    this.$.lazyGrid.selectItem(data[i]);
+                    this._activeItemChanged(data[i]);
                   }
                 }
                 callback(data);
@@ -168,15 +168,15 @@
 
       create: function(newPerson) {
         // FIXME: Grid need restart to show the new item
-        newPerson.idx = this.allDocs.length;
+        var newIdx = this.allDocs.length;
         this.localDB.post(newPerson).then(response => {
-          this.allDocs[newPerson.idx] = {
+          this.allDocs[newIdx] = {
             value: {
               rev: response.rev
             },
             id: response.id
           }
-          this.selectedId = newPerson.idx;
+          this.selectedId = newIdx;
 
           this.$.lazyGrid.clearCache();
         });
@@ -197,6 +197,7 @@
         // Clear selection first
         this.$.lazyGrid.selectedItems = [];
         this.selectedId = undefined;
+
         this.fire('on-add');
       },
 
