@@ -182,6 +182,7 @@
       _refreshGrid: function() {
         // TODO: Problem when clicking on update twice
         this.$.lazyGrid.clearCache();
+        this._selectedItemsChanged();
         this.$.lazyGrid._scrollToIndex(this._getSelectedItem().idx);
       },
 
