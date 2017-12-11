@@ -78,6 +78,10 @@
 
         if(newPerson) {
           this.person = newPerson;
+          if(!this.person.address) {
+            // TODO: find better fix in case of empty object?
+            this.person.address = {};
+          }
           this.$.firstName.value = this.person.firstName;
           this.$.lastName.value = this.person.lastName;
           this.$.phone.value = this.person.address.phone;
