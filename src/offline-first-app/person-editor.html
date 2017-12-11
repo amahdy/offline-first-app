@@ -42,6 +42,8 @@
           Delete
         </vaadin-button>
     </vaadin-form-layout>
+
+    <iron-a11y-keys keys="enter" on-keys-pressed="update"></iron-a11y-keys>
   </template>
 
   <script>
@@ -52,8 +54,7 @@
       properties: {
         person: {
           type: Object,
-          value: {},
-          observer: '_personChanged'
+          value: {}
         },
 
         isUpdate: {
@@ -62,13 +63,22 @@
         },
       },
 
-      _personChanged: function() {
-        if(this.person && Object.keys(this.person).length) {
+      updatePerson: function(newPerson, isManual) {
+
+        // Only focus when editing or manually adding.
+        // Don't focus on first load of the page.
+        if(newPerson || isManual) {
+          this.$.firstName.focus();
+        }
+
+        if(newPerson) {
+          this.person = newPerson;
           this.$.firstName.value = this.person.firstName;
           this.$.lastName.value = this.person.lastName;
           this.$.email.value = this.person.email;
           this.isUpdate = true;
         }else {
+          this.person = {};
           this.$.firstName.value = '';
           this.$.lastName.value = '';
           this.$.email.value = '';
@@ -81,7 +91,7 @@
         this.person.lastName = this.$.lastName.value;
         this.person.email = this.$.email.value;
 
-        if(!this.isUpdate) { /* For create case*/
+        if(!this.isUpdate) {
           this.fire('on-create', {newPerson: this.person});
         }else {
           this.fire('on-update', {newPerson: this.person});

@@ -45,6 +45,8 @@
                  aria-label="Offline Grid"
                  data-provider="[[dataProvider]]"
                  active-item="{{activeItem}}"
+                 selected-items="{{selectedItems}}"
+                 item-id-path="_id"
                  size="[[size]]">
 
       <vaadin-grid-column width="250px" flex-grow="0">
@@ -123,6 +125,10 @@
           observer: '_activeItemChanged',
         },
 
+        selectedItems: {
+          observer: '_selectedItemsChanged',
+        },
+
         // Remote DB, running on a local instance of CouchDB.
         remoteDB: {
           type: PouchDB,
@@ -139,20 +145,34 @@
 
         size: Number, // Size of total rows in the grid.
 
-        selectedId: Number, // ID of currently selected item.
-
         searchResults: Array, // Filter grid based on those results.
       },
 
-      _activeItemChanged: function(selectedItem) {
-        this.$.lazyGrid.selectedItems = selectedItem ? [selectedItem] : [];
-        this.fire('on-select', {selected: selectedItem});
+      _getSelectedItem() {
+        return this.selectedItems[0];
       },
 
-      _refreshGrid: function(selectionId) {
-        this.selectedId = selectionId;
+      _setSelectedItem(selectedItem) {
+        if(selectedItem) {
+          this.selectedItems = [selectedItem];
+        }else {
+          this.selectedItems = [];
+        }
+      },
+
+      _activeItemChanged: function(activeItem) {
+        this._setSelectedItem(activeItem);
+      },
+
+      _selectedItemsChanged: function() {
+        // this._getSelectedItem() && alert("yo" + this._getSelectedItem().firstName)
+        this.fire('on-select', {selected: this._getSelectedItem()});
+      },
+
+      _refreshGrid: function() {
+        // TODO: Problem when clicking on update twice
         this.$.lazyGrid.clearCache();
-        this.$.lazyGrid.$.scroller.scrollToScaledIndex(selectionId)
+        this.$.lazyGrid._scrollToIndex(this._getSelectedItem().idx);
       },
 
       _loadData: function() {
@@ -198,11 +218,6 @@
                         }
                       }
                     }
-
-                    // Reselect previously selected item (if any).
-                    if(this.selectedId == data[i].idx) {
-                      this._activeItemChanged(data[i]);
-                    }
                   }
                   callback(data);
                 });
@@ -231,7 +246,7 @@
 
       update: function(newPerson) {
         this.localDB.put(newPerson).then(response => {
-          this._refreshGrid(newPerson.idx);
+          this._refreshGrid();
         });
       },
 
@@ -242,15 +257,19 @@
             id: response.id
           });
           this.size = this.allDocs.length;
-          this._refreshGrid(0);
+          newPerson.idx = 0;
+          newPerson._id = response.id;
+          this._setSelectedItem(newPerson);
+          this._refreshGrid();
         });
       },
 
       search: function(value) {
         // Make sure to unselect any selected item
-        this._activeItemChanged(null);
+        this._setSelectedItem(null);
 
         if(value) {
+          // TODO: Fix custom search
           this.localDB.search({
             query: value,
             fields: ['firstName',
@@ -283,8 +302,7 @@
 
       add: function() {
         // Clear selection first
-        this.$.lazyGrid.selectedItems = [];
-        this.selectedId = undefined;
+        this._setSelectedItem(null);
 
         this.fire('on-add');
       },
