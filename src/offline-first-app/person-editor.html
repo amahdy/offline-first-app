@@ -28,7 +28,7 @@
     </style>
 
     <vaadin-form-layout class="with-text-fields">
-      <vaadin-text-field placeholder="First Name" id="firstName"></vaadin-text-field>
+      <vaadin-text-field required minlength="3" placeholder="First Name" id="firstName"></vaadin-text-field>
       <vaadin-text-field placeholder="Last Name" id="lastName"></vaadin-text-field>
       <vaadin-text-field placeholder="Phone" id="phone"></vaadin-text-field>
       <vaadin-text-field placeholder="E-Mail" id="email"></vaadin-text-field>
@@ -58,7 +58,7 @@
       properties: {
         person: {
           type: Object,
-          value: {}
+          value: {address: {}}
         },
 
         isUpdate: {
@@ -67,18 +67,18 @@
         },
       },
 
-      updatePerson: function(newPerson, isManual) {
+      setPerson: function(person, isManual) {
 
         // Only focus when editing or manually adding.
         // Don't focus on first load of the page.
         // Don't focus after de-selection.
-        if(newPerson || isManual) {
+        if(person || isManual) {
           this.$.firstName.focus();
         }
 
-        if(newPerson) {
-          this.person = newPerson;
-          if(!this.person.address) {
+        if(person) {
+          this.person = person;
+          if(!person.address) {
             // TODO: find better fix in case of empty object?
             this.person.address = {};
           }
@@ -89,8 +89,7 @@
           this.$.address.value = this.person.address.street;
           this.isUpdate = true;
         }else {
-          this.person = {};
-          this.person.address = {};
+          this.person = {address: {}};
           this.$.firstName.value = '';
           this.$.lastName.value = '';
           this.$.phone.value = '';
@@ -101,16 +100,16 @@
       },
 
       update: function() {
-        this.person.firstName = this.$.firstName.value;
-        this.person.lastName = this.$.lastName.value;
-        this.person.address.phone = this.$.phone.value;
-        this.person.email = this.$.email.value;
-        this.person.address.street = this.$.address.value;
+        if(this.$.firstName.validate()) {
+          this.person.firstName = this.$.firstName.value;
+          this.person.lastName = this.$.lastName.value;
+          this.person.address.phone = this.$.phone.value;
+          this.person.email = this.$.email.value;
+          this.person.address.street = this.$.address.value;
 
-        if(!this.isUpdate) {
-          this.fire('on-create', {newPerson: this.person});
+          this.fire(this.isUpdate ? 'on-update' : 'on-create', {newPerson: this.person});
         }else {
-          this.fire('on-update', {newPerson: this.person});
+          // UI will notify of validation error.
         }
       },
 

@@ -78,11 +78,11 @@
 
       ready: function() {
         this.$.offlineGrid.addEventListener('on-select', evt => {
-          this.$.editor.updatePerson(evt.detail.selected);
+          this.$.editor.setPerson(evt.detail.selected);
         });
 
         this.$.offlineGrid.addEventListener('on-add', evt => {
-          this.$.editor.updatePerson(null, true);
+          this.$.editor.setPerson(null, true);
         });
 
         this.$.editor.addEventListener('on-update', evt => {

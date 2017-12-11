@@ -176,7 +176,6 @@
       },
 
       _selectedItemsChanged: function() {
-        // this._getSelectedItem() && alert("yo" + this._getSelectedItem().firstName)
         this.fire('on-select', {selected: this._getSelectedItem()});
       },
 
