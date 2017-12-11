@@ -1,6 +1,8 @@
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
+<link rel="import" href="../../bower_components/iron-media-query/iron-media-query.html">
+
 <link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-split-layout.html">
 
 <link rel="import" href="../../bower_components/vaadin-split-layout/vaadin-split-layout.html">
@@ -32,17 +34,23 @@
       }
 
       #gridArea {
-        width: 75%;
-        height: 100%;
         display: flex;
         flex-direction: column;
         flex: 10000;
       }
 
+      #gridArea[wide-layout] {
+        width: 75%;
+        height: 100%;
+      }
+
       #editor {
+        padding: 8px;
+      }
+
+      #editor[wide-layout] {
         width: 25%;
         height: 100%;
-        padding: 8px;
       }
 
       #search {
@@ -50,13 +58,15 @@
       }
     </style>
 
-    <vaadin-split-layout id="topLayout" theme="subtle">
-      <div id="gridArea">
+    <iron-media-query query="(min-width: 600px)" query-matches="{{wide}}"></iron-media-query>
+
+    <vaadin-split-layout vertical$="{{!wide}}" id="topLayout" theme="subtle" on-tap="stageSplitter">
+      <div id="gridArea" wide-layout$="{{wide}}">
         <person-search id="search"></person-search>
         <offline-grid id="offlineGrid"></offline-grid>
       </div>
 
-      <person-editor id="editor"></person-editor>
+      <person-editor id="editor" wide-layout$="{{wide}}"></person-editor>
 
     </vaadin-split-layout>
   </template>

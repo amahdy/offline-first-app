@@ -29,19 +29,19 @@
       <vaadin-text-field placeholder="First Name" id="firstName"></vaadin-text-field>
       <vaadin-text-field placeholder="Last Name" id="lastName"></vaadin-text-field>
       <vaadin-text-field placeholder="E-Mail" id="email"></vaadin-text-field>
-      <br>
-      <vaadin-button on-tap="update">
-        <template is="dom-if" if="[[isUpdate]]">
-          Update
-        </template>
-        <template is="dom-if" if="[[!isUpdate]]">
-          Create
-        </template>
-        </vaadin-button>
-        <vaadin-button hidden$="[[!isUpdate]]" theme="error" on-tap="delete">
-          Delete
-        </vaadin-button>
     </vaadin-form-layout>
+
+    <vaadin-button on-tap="update">
+      <template is="dom-if" if="[[isUpdate]]">
+        Update
+      </template>
+      <template is="dom-if" if="[[!isUpdate]]">
+        Create
+      </template>
+    </vaadin-button>
+    <vaadin-button hidden$="[[!isUpdate]]" theme="error" on-tap="delete">
+      Delete
+    </vaadin-button>
 
     <iron-a11y-keys keys="enter" on-keys-pressed="update"></iron-a11y-keys>
   </template>
@@ -67,6 +67,7 @@
 
         // Only focus when editing or manually adding.
         // Don't focus on first load of the page.
+        // Don't focus after de-selection.
         if(newPerson || isManual) {
           this.$.firstName.focus();
         }
