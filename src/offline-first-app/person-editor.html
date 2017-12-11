@@ -5,12 +5,14 @@
 
 <link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-button.html">
 <link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-text-field.html">
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-text-area.html">
 <link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-form-layout.html">
 <link rel="import" href="../../bower_components/vaadin-icons/vaadin-icons.html">
 <link rel="import" href="../../bower_components/vaadin-form-layout/vaadin-form-layout.html">
 
 <link rel="import" href="../../bower_components/vaadin-button/vaadin-button.html">
 <link rel="import" href="../../bower_components/vaadin-text-field/vaadin-text-field.html">
+<link rel="import" href="../../bower_components/vaadin-text-field/vaadin-text-area.html">
 
 <dom-module id="person-editor">
   <template>
@@ -28,7 +30,9 @@
     <vaadin-form-layout class="with-text-fields">
       <vaadin-text-field placeholder="First Name" id="firstName"></vaadin-text-field>
       <vaadin-text-field placeholder="Last Name" id="lastName"></vaadin-text-field>
+      <vaadin-text-field placeholder="Phone" id="phone"></vaadin-text-field>
       <vaadin-text-field placeholder="E-Mail" id="email"></vaadin-text-field>
+      <vaadin-text-area placeholder="Address" id="address"></vaadin-text-area>
     </vaadin-form-layout>
 
     <vaadin-button on-tap="update">
@@ -76,13 +80,18 @@
           this.person = newPerson;
           this.$.firstName.value = this.person.firstName;
           this.$.lastName.value = this.person.lastName;
+          this.$.phone.value = this.person.address.phone;
           this.$.email.value = this.person.email;
+          this.$.address.value = this.person.address.street;
           this.isUpdate = true;
         }else {
           this.person = {};
+          this.person.address = {};
           this.$.firstName.value = '';
           this.$.lastName.value = '';
+          this.$.phone.value = '';
           this.$.email.value = '';
+          this.$.address.value = '';
           this.isUpdate = false;
         }
       },
@@ -90,7 +99,9 @@
       update: function() {
         this.person.firstName = this.$.firstName.value;
         this.person.lastName = this.$.lastName.value;
+        this.person.address.phone = this.$.phone.value;
         this.person.email = this.$.email.value;
+        this.person.address.street = this.$.address.value;
 
         if(!this.isUpdate) {
           this.fire('on-create', {newPerson: this.person});

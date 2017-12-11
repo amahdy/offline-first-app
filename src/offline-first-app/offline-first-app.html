@@ -60,7 +60,7 @@
 
     <iron-media-query query="(min-width: 600px)" query-matches="{{wide}}"></iron-media-query>
 
-    <vaadin-split-layout vertical$="{{!wide}}" id="topLayout" theme="subtle" on-tap="stageSplitter">
+    <vaadin-split-layout vertical$="{{!wide}}" id="topLayout" theme="subtle">
       <div id="gridArea" wide-layout$="{{wide}}">
         <person-search id="search"></person-search>
         <offline-grid id="offlineGrid"></offline-grid>
