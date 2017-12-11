@@ -37,9 +37,20 @@
         right: 20px;
         bottom: 20px;
         border-radius: 50%;
-        font-size: 12px;
+      }
+
+      .main-col {
+        width:100%;
+        flex-grow:§1;
+      }
+
+      .main-col[wide-layout] {
+        width: 250px;
+        flex-grow: 0;
       }
     </style>
+
+    <iron-media-query query="(min-width: 600px)" query-matches="{{wide}}"></iron-media-query>
 
     <vaadin-grid id="lazyGrid"
                  aria-label="Offline Grid"
@@ -49,7 +60,7 @@
                  item-id-path="_id"
                  size="[[size]]">
 
-      <vaadin-grid-column width="250px" flex-grow="0">
+      <vaadin-grid-column class="main-col" wide-layout$="{{wide}}">
         <template class="header">Name</template>
         <template>
           <span class="grid-cell">
@@ -69,7 +80,7 @@
         </template>
       </vaadin-grid-column>
 
-      <vaadin-grid-column width="170px" flex-grow="0">
+      <vaadin-grid-column width="170px" flex-grow="0" hidden$="{{!wide}}">
         <template class="header">Phone</template>
         <template>
           <span class="grid-cell">
@@ -83,7 +94,7 @@
         </template>
       </vaadin-grid-column>
 
-      <vaadin-grid-column flex-grow="1">
+      <vaadin-grid-column flex-grow="1" hidden$="{{!wide}}">
         <template class="header">Address</template>
         <template>
           <span class="grid-cell">
