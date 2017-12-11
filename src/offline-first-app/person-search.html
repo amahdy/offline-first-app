@@ -5,7 +5,7 @@
 
 <link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-button.html">
 <link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-text-field.html">
-<link rel="import" href="../../bower_components/vaadin-icons/vaadin-icons.html">
+<link rel="import" href="../../bower_components/vaadin-valo-theme/icons.html">
 
 <link rel="import" href="../../bower_components/vaadin-button/vaadin-button.html">
 <link rel="import" href="../../bower_components/vaadin-text-field/vaadin-text-field.html">
@@ -26,11 +26,6 @@
         flex: 2;
       }
 
-      .clear-button {
-        color: red;
-        font-size: 10px;
-      }
-
       .find-button {
         font-size: 12px;
       }
@@ -38,16 +33,14 @@
 
     <div id="topLayout">
       <vaadin-text-field autofocus placeholder="Search.." id="search" value="{{value}}">
-        <div slot="suffix">
-          <template is="dom-if" if="[[value]]">
-            <vaadin-button theme="icon x-small tertiary" class="clear-button" on-tap="clear">
-              <iron-icon icon="vaadin:close-circle-o"></iron-icon>
-            </vaadin-button>
-          </template>
-        </div>
+        <template is="dom-if" if="[[value]]">
+          <vaadin-button tabindex="-1" theme="icon small contrast tertiary" on-tap="clear" slot="suffix">
+            <iron-icon icon="valo:cross"></iron-icon>
+          </vaadin-button>
+        </template>
       </vaadin-text-field>
-      <vaadin-button theme="icon" class="find-button" on-tap="find">
-        <iron-icon icon="vaadin:search"></iron-icon>
+      <vaadin-button theme="icon tertiary" on-tap="find">
+        <iron-icon icon="valo:magnifier"></iron-icon>
       </vaadin-button>
     </div>
 

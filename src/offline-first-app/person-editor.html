@@ -19,14 +19,9 @@
         display: block;
       }
 
-      .update-button {
-        font-size: 12px;
-        width: 100%;
-      }
-
-      .delete-button {
-        font-size: 12px;
-        width: 100%;
+      /* expected to be fixed in vaadin-button 1.0.5 */
+      vaadin-button[hidden] {
+        display: none;
       }
     </style>
 
@@ -34,19 +29,18 @@
       <vaadin-text-field placeholder="First Name" id="firstName"></vaadin-text-field>
       <vaadin-text-field placeholder="Last Name" id="lastName"></vaadin-text-field>
       <vaadin-text-field placeholder="E-Mail" id="email"></vaadin-text-field>
-      <vaadin-button class="update-button" theme="success" on-tap="update">
+      <br>
+      <vaadin-button on-tap="update">
         <template is="dom-if" if="[[isUpdate]]">
-          <iron-icon icon="vaadin:check-square-o"></iron-icon>
+          Update
         </template>
         <template is="dom-if" if="[[!isUpdate]]">
-          <iron-icon icon="vaadin:user-check"></iron-icon>
+          Create
         </template>
-      </vaadin-button>
-      <template is="dom-if" if="[[isUpdate]]">
-        <vaadin-button class="delete-button" theme="danger" on-tap="delete">
-          <iron-icon icon="vaadin:close"></iron-icon>
         </vaadin-button>
-      </template>
+        <vaadin-button hidden$="[[!isUpdate]]" theme="error" on-tap="delete">
+          Delete
+        </vaadin-button>
     </vaadin-form-layout>
   </template>
 

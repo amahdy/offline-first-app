@@ -14,10 +14,16 @@
     <style>
       :host {
         display: block;
+        background-color: var(--valo-contrast-5pct);
       }
 
       #topLayout {
         height: 100%;
+      }
+
+      /* https://github.com/vaadin/vaadin-valo-theme/issues/43 */
+      #topLayout > * {
+        --valo-size: var(--valo-size-m);
       }
 
       #offlineGrid {
@@ -30,20 +36,21 @@
         height: 100%;
         display: flex;
         flex-direction: column;
+        flex: 10000;
       }
 
       #editor {
         width: 25%;
         height: 100%;
-        margin: 8px;
+        padding: 8px;
       }
 
       #search {
-        margin: 8px;
+        padding: 8px;
       }
     </style>
 
-    <vaadin-split-layout id="topLayout">
+    <vaadin-split-layout id="topLayout" theme="subtle">
       <div id="gridArea">
         <person-search id="search"></person-search>
         <offline-grid id="offlineGrid"></offline-grid>
