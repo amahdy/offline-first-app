@@ -12,31 +12,6 @@
 <link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../../bower_components/vaadin-button/vaadin-button.html">
 
-<dom-module id="search-highlight">
-  <template>
-    <style>
-      .search-highlight {
-          background-color: yellow;
-      }
-    </style>
-    <span id="placeHolder"></span>
-  </template>
-  <script>
-    Polymer({
-      is: 'search-highlight',
-      properties: {
-        value: {
-          type: String,
-          observer: '_valueChanged'
-        }
-      },
-      _valueChanged: function (value) {
-        this.$.placeHolder.innerHTML = value;
-      }
-    });
-  </script>
-</dom-module>
-
 <dom-module id="offline-grid">
   <template>
     <style>
@@ -51,6 +26,10 @@
 
       .grid-cell {
         display: inline;
+      }
+
+      .search-highlight {
+          background-color: yellow;
       }
 
       .add-button {
@@ -73,13 +52,13 @@
         <template>
           <span class="grid-cell">
             <template is="dom-if" if="[[item.highlight_firstName]]">
-              <search-highlight value="[[item.highlight_firstName]]"></search-highlight>
+              <span inner-H-T-M-L="[[item.highlight_firstName]]"></span>
             </template>
             <template is="dom-if" if="[[!item.highlight_firstName]]">
               [[item.firstName]]
             </template>
             <template is="dom-if" if="[[item.highlight_lastName]]">
-              <search-highlight value="[[item.highlight_lastName]]"></search-highlight>
+                <span inner-H-T-M-L="[[item.highlight_lastName]]"></span>
             </template>
             <template is="dom-if" if="[[!item.highlight_lastName]]">
               [[item.lastName]]
@@ -93,7 +72,7 @@
         <template>
           <span class="grid-cell">
             <template is="dom-if" if="[[item.highlight_address_phone]]">
-              <search-highlight value="[[item.highlight_address_phone]]"></search-highlight>
+              <span inner-H-T-M-L="[[item.highlight_address_phone]]"></span>
             </template>
             <template is="dom-if" if="[[!item.highlight_address_phone]]">
               [[item.address.phone]]
@@ -107,7 +86,7 @@
         <template>
           <span class="grid-cell">
             <template is="dom-if" if="[[item.highlight_address_street]]">
-              <search-highlight value="[[item.highlight_address_street]]"></search-highlight>
+              <span inner-H-T-M-L="[[item.highlight_address_street]]"></span>
             </template>
             <template is="dom-if" if="[[!item.highlight_address_street]]">
               [[item.address.street]]
@@ -116,7 +95,7 @@
               ,
             </template>
             <template is="dom-if" if="[[item.highlight_address_city]]">
-              <search-highlight value="[[item.highlight_address_city]]"></search-highlight>
+              <span inner-H-T-M-L="[[item.highlight_address_city]]"></span>
             </template>
             <template is="dom-if" if="[[!item.highlight_address_city]]">
               [[item.address.city]]
