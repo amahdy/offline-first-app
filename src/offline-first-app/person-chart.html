@@ -1,0 +1,72 @@
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/vaadin-charts/vaadin-charts.html">
+
+<dom-module id="person-chart">
+  <template>
+    <style>
+    :host {
+      display: block;
+    }
+    </style>
+
+    <vaadin-pie-chart>
+      <chart-title text="null"></chart-title>
+      <exporting enabled="false"></exporting>
+      <chart background-color="rgba(255, 255, 255, 0)"></chart>
+      <plot-options>
+        <pie>
+          <data-labels enabled="true" format="<b>{point.name}</b>:  {point.percentage:.1f} %">
+          </data-labels>
+        </pie>
+      </plot-options>
+
+      <data-series data=[[data]]>
+      </data-series>
+    </vaadin-pie-chart>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'person-chart',
+
+      properties: {
+        currentData: {
+          type: Object,
+          value: {"CST":0, "AKST":0, "HST":0, "MST":0, "PST":0, "EST":0, "UNKNOWN":0}
+        },
+
+        data: {
+          type: Array
+        }
+      },
+
+      ready: function() {
+        this.timezones = {
+          "CST": ["Alabama", "Arkansas", "Illinois", "Iowa", "Kansas", "Kentucky", "Louisiana", "Minnesota", "Mississippi", "Missouri", "Nebraska", "North Dakota", "Oklahoma", "South Dakota", "Tennessee", "Texas", "Wisconsin"],
+          "AKST": ["Alaska"],
+          "HST": ["Aleutian Islands", "Hawaii"],
+          "MST": ["Arizona", "Colorado", "Idaho", "Montana", "New Mexico", "Utah", "Wyoming"],
+          "PST": ["California", "Nevada", "Oregon", "Washington"],
+          "EST": ["Connecticut", "Delaware", "Florida", "Georgia", "Indiana", "Maine", "Maryland", "Massachusetts", "Michigan", "New Hampshire", "New Jersey", "New York", "North Carolina", "Ohio", "Pennsylvania", "Rhode Island", "South Carolina", "Vermont", "Virginia", "Washington D.C.", "West Virginia"],
+          "UNKNOWN": ["unknown"]
+        }
+      },
+
+      updateStats: function(stateStats) {
+        for(var zone in this.timezones) {
+          for(var state in stateStats) {
+            if(this.timezones[zone].indexOf(state) > -1) {
+              this.currentData[zone]++;
+            }
+          }
+        }
+
+        this.data = Object.entries(this.currentData);
+      },
+
+    });
+  </script>
+</dom-module>

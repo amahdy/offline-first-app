@@ -157,6 +157,11 @@
         size: Number, // Size of total rows in the grid.
 
         searchResults: Array, // Filter grid based on those results.
+
+        stateStats: {
+          type: Object,
+          value: {"unknown":0}
+        },
       },
 
       _getSelectedItem() {
@@ -216,6 +221,17 @@
                     data[i] = json.results[i].docs[0].ok;
                     data[i].idx = i + currentIndex;
 
+                    if(data[i].address) {
+                      if(this.stateStats[data[i].address.state]) {
+                        this.stateStats[data[i].address.state]++;
+                      }else {
+                        this.stateStats[data[i].address.state] = 1;
+                      }
+                    }else {
+                      this.stateStats["unknown"]++;
+                    }
+                    this._stateStatsChanged();
+
                     // Hilight docs in search mode
                     if(this.searchResults && currentDocs[i].highlighting) {
                       for (prop in currentDocs[i].highlighting) {
@@ -238,6 +254,10 @@
             }
           });
         });
+      },
+
+      _stateStatsChanged: function() {
+        this.fire('on-stats', {stateStates: this.stateStats});
       },
 
       ready: function() {

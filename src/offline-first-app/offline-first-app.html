@@ -10,6 +10,7 @@
 <link rel="import" href="./offline-grid.html">
 <link rel="import" href="./person-editor.html">
 <link rel="import" href="./person-search.html">
+<link rel="import" href="./person-chart.html">
 
 <dom-module id="offline-first-app">
   <template>
@@ -44,17 +45,23 @@
         height: 100%;
       }
 
-      #editor {
+      #editorArea {
         padding: 8px;
+        display: flex;
+        flex-direction: column;
       }
 
-      #editor[wide-layout] {
+      #editorArea[wide-layout] {
         width: 25%;
         height: 100%;
       }
 
       #search {
         padding: 8px;
+      }
+
+      #chart {
+        flex: 2;
       }
     </style>
 
@@ -65,8 +72,10 @@
         <person-search id="search"></person-search>
         <offline-grid id="offlineGrid"></offline-grid>
       </div>
-
-      <person-editor id="editor" wide-layout$="{{wide}}"></person-editor>
+      <div id="editorArea" wide-layout$="{{wide}}">
+        <person-editor id="editor"></person-editor>
+        <person-chart id="chart"></person-chart>
+      </div>
 
     </vaadin-split-layout>
   </template>
@@ -83,6 +92,10 @@
 
         this.$.offlineGrid.addEventListener('on-add', evt => {
           this.$.editor.setPerson(null, true);
+        });
+
+        this.$.offlineGrid.addEventListener('on-stats', evt => {
+          this.$.chart.updateStats(evt.detail.stateStates);
         });
 
         this.$.editor.addEventListener('on-update', evt => {
