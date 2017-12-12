@@ -33,11 +33,6 @@
       is: 'person-chart',
 
       properties: {
-        currentData: {
-          type: Object,
-          value: {"CST":0, "AKST":0, "HST":0, "MST":0, "PST":0, "EST":0, "UNKNOWN":0}
-        },
-
         data: {
           type: Array
         }
@@ -51,20 +46,25 @@
           "MST": ["Arizona", "Colorado", "Idaho", "Montana", "New Mexico", "Utah", "Wyoming"],
           "PST": ["California", "Nevada", "Oregon", "Washington"],
           "EST": ["Connecticut", "Delaware", "Florida", "Georgia", "Indiana", "Maine", "Maryland", "Massachusetts", "Michigan", "New Hampshire", "New Jersey", "New York", "North Carolina", "Ohio", "Pennsylvania", "Rhode Island", "South Carolina", "Vermont", "Virginia", "Washington D.C.", "West Virginia"],
-          "UNKNOWN": ["unknown"]
+          "UNKNOWN": ["unknown", "undefined"]
         }
       },
 
       updateStats: function(stateStats) {
+        var currentData = new Array();
         for(var zone in this.timezones) {
           for(var state in stateStats) {
             if(this.timezones[zone].indexOf(state) > -1) {
-              this.currentData[zone]++;
+              if(currentData[zone]) {
+                currentData[zone]++;
+              }else {
+                currentData[zone] = 1;
+              }
             }
           }
         }
 
-        this.data = Object.entries(this.currentData);
+        this.data = Object.entries(currentData);
       },
 
     });

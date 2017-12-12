@@ -160,7 +160,12 @@
 
         stateStats: {
           type: Object,
-          value: {"unknown":0}
+          value: {}
+        },
+
+        stateStatsIds: {
+          type: Array,
+          value: []
         },
       },
 
@@ -221,16 +226,23 @@
                     data[i] = json.results[i].docs[0].ok;
                     data[i].idx = i + currentIndex;
 
-                    if(data[i].address) {
-                      if(this.stateStats[data[i].address.state]) {
-                        this.stateStats[data[i].address.state]++;
+                    if(this.stateStatsIds.indexOf(data[i]._id)<0) {
+                      this.stateStatsIds.push(data[i]._id);
+                      if(data[i].address) {
+                        if(this.stateStats[data[i].address.state]) {
+                          this.stateStats[data[i].address.state]++;
+                        }else {
+                          this.stateStats[data[i].address.state] = 1;
+                        }
                       }else {
-                        this.stateStats[data[i].address.state] = 1;
+                        if(this.stateStats["unknown"]) {
+                          this.stateStats["unknown"]++;
+                        }else {
+                          this.stateStats["unknown"] = 1;
+                        }
                       }
-                    }else {
-                      this.stateStats["unknown"]++;
+                      this._stateStatsChanged();
                     }
-                    this._stateStatsChanged();
 
                     // Hilight docs in search mode
                     if(this.searchResults && currentDocs[i].highlighting) {
@@ -298,6 +310,11 @@
       search: function(value) {
         // Make sure to unselect any selected item
         this._setSelectedItem(null);
+
+        // Reset chart
+        this.stateStatsIds = new Array();
+        this.stateStats = {};
+        this._stateStatsChanged();
 
         if(value) {
           // TODO: Fix custom search
