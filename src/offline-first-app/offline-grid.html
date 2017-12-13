@@ -239,6 +239,8 @@
                 }).then(json => {
                   for(var i=0; i<json.results.length; i++) {
                     data[i] = json.results[i].docs[0].ok;
+                    // TODO: avoid keeping track of indexes
+                    // https://github.com/vaadin/vaadin-grid/issues/1154
                     data[i].idx = i + currentIndex;
 
                     // Update stats
