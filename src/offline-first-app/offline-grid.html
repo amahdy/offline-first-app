@@ -142,6 +142,11 @@
       is: 'offline-grid',
 
       properties: {
+        demoMode: {
+          type: Boolean,
+          value: false
+        },
+
         activeItem: {
           observer: '_activeItemChanged',
         },
@@ -207,6 +212,7 @@
       },
 
       _loadData: function() {
+        if(!this.demoMode)
         PouchDB.sync(this.remoteDB, this.localDB, {
           live: true,
           retry: true,
@@ -236,6 +242,7 @@
                     data[i] = json.results[i].docs[0].ok;
                     data[i].idx = i + currentIndex;
 
+                    // Update stats
                     if(this.stateStatsIds.indexOf(data[i]._id)<0) {
                       this.stateStatsIds.push(data[i]._id);
                       if(data[i].address) {
@@ -281,10 +288,18 @@
       _installDemo: function() {
         $.get('src/resources/data.json', data => {
           this.localDB.bulkDocs(data.result).then(create => {
-            location.reload();
+            location.href = "./?rundemo";
           }).catch(insertErr => {
             document.write("Failed to create local demo:\n" + insertErr);
           });
+        });
+      },
+
+      _resetDemo: function() {
+        this.localDB.destroy().then(dest => {
+          location.href = "./";
+        }).catch(destErr => {
+          document.write("Can't destroy local database:\n" + destErr);
         });
       },
 
@@ -293,6 +308,21 @@
       },
 
       ready: function() {
+        // Check if demo reset is requested
+        if(location.href.endsWith("?resetdemo")) {
+          this._resetDemo();
+        }
+
+        // Check if demo mode is requested
+        if(location.href.endsWith("?demo")) {
+          this._installDemo();
+        }
+
+        // Running in demo mode
+        if(location.href.endsWith("?rundemo")) {
+          this.demoMode = true;
+        }
+
         // For first visit, we must replicate first
         this.localDB.info().then(localdbinfo => {
           if(localdbinfo.doc_count === 0) {
