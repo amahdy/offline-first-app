@@ -268,12 +268,6 @@
                         var highlightKey = 'highlight_' + prop.replace('.', '_');
                         data[i][highlightKey] = currentDocs[i].highlighting[prop];
                       }
-                    }else {
-                      for(prop in data[i]) {
-                        if(prop.startsWith('highlight_')) {
-                          delete data[i][prop];
-                        }
-                      }
                     }
                   }
                   callback(data);
@@ -341,6 +335,14 @@
       },
 
       update: function(newPerson) {
+        // Cleanup before storing
+        for(prop in newPerson) {
+          if(prop.startsWith('highlight_')) {
+            delete newPerson[prop];
+          }
+        }
+        delete newPerson.idx;
+
         this.localDB.put(newPerson).then(response => {
           // TODO: Bug? Grid does not update selectedItems after clearCache
           // https://github.com/vaadin/vaadin-grid/issues/1153
