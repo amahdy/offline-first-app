@@ -67,13 +67,17 @@
         },
       },
 
-      setPerson: function(person, isManual) {
+      setFocus: function() {
+        this.$.firstName.focus();
+      },
+
+      setPerson: function(person) {
 
         // Only focus when editing or manually adding.
         // Don't focus on first load of the page.
         // Don't focus after de-selection.
-        if(person || isManual) {
-          this.$.firstName.focus();
+        if(person) {
+          this.setFocus();
         }
 
         if(person) {
