@@ -226,7 +226,7 @@
 
             this.dataProvider = (params, callback) => {
 
-              var currentIndex = params.page;
+              var currentIndex = params.page * params.pageSize;
               var usedDocs = this.searchResults ? this.searchResults : this.allDocs;
 
               // Construct docs starting from current index,
