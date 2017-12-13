@@ -1,6 +1,7 @@
 
 <script src="../../bower_components/pouchdb/dist/pouchdb.min.js"></script>
 <script src="../../bower_components/pouchdb-quick-search/dist/pouchdb.quick-search.min.js"></script>
+<script src="../../bower_components/jquery/dist/jquery.min.js"></script>
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/polymer/lib/elements/dom-if.html">
@@ -11,6 +12,8 @@
 
 <link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
 <link rel="import" href="../../bower_components/vaadin-button/vaadin-button.html">
+
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 
 <dom-module id="offline-grid">
   <template>
@@ -124,6 +127,13 @@
           <iron-icon icon="vaadin:plus"></iron-icon>
       </vaadin-button>
     </div>
+    
+    <paper-toast id="demoWarn" 
+                 class="fit-bottom"
+                 text="Unable to find remote nor locale database, install demo mode?"
+                 duration="0">
+      <vaadin-button on-tap="_installDemo" theme="tertiary" style="color:red;">Run Demo</vaadin-button>
+    </paper-toast>
   </template>
 
   <script>
@@ -268,6 +278,16 @@
         });
       },
 
+      _installDemo: function() {
+        $.get('/src/resources/data.json', data => {
+          this.localDB.bulkDocs(data.result).then(create => {
+            location.reload();
+          }).catch(insertErr => {
+            document.write("Failed to create local demo:\n" + insertErr);
+          });
+        });
+      },
+
       _stateStatsChanged: function() {
         this.fire('on-stats', {stateStates: this.stateStats});
       },
@@ -276,10 +296,12 @@
         // For first visit, we must replicate first
         this.localDB.info().then(localdbinfo => {
           if(localdbinfo.doc_count === 0) {
-            // TODO: Handle error
+            // TODO: Handle other errors
             // TODO: Do this in the background and display already loaded data
             PouchDB.replicate(this.remoteDB, this.localDB).on('complete', info => {
               this._loadData();
+            }).on('error', err => {
+              this.$.demoWarn.open();
             });
           }else {
             this._loadData();
