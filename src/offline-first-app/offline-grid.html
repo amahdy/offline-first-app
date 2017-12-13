@@ -32,7 +32,7 @@
       }
 
       .search-highlight {
-          background-color: yellow;
+        background-color: yellow;
       }
 
       .add-button {
@@ -55,13 +55,14 @@
 
     <iron-media-query query="(min-width: 600px)" query-matches="{{wide}}"></iron-media-query>
 
-    <vaadin-grid id="lazyGrid"
-                 aria-label="Offline Grid"
-                 data-provider="[[dataProvider]]"
-                 active-item="{{activeItem}}"
-                 selected-items="{{selectedItems}}"
-                 item-id-path="_id"
-                 size="[[size]]">
+    <vaadin-grid 
+      id="lazyGrid"
+      aria-label="Offline Grid"
+      data-provider="[[dataProvider]]"
+      active-item="{{activeItem}}"
+      selected-items="{{selectedItems}}"
+      item-id-path="_id"
+      size="[[size]]">
 
       <vaadin-grid-column class="main-col" wide-layout$="{{wide}}">
         <template class="header">Name</template>
@@ -74,7 +75,7 @@
               [[item.firstName]]
             </template>
             <template is="dom-if" if="[[item.highlight_lastName]]">
-                <span inner-H-T-M-L="[[item.highlight_lastName]]"></span>
+              <span inner-H-T-M-L="[[item.highlight_lastName]]"></span>
             </template>
             <template is="dom-if" if="[[!item.highlight_lastName]]">
               [[item.lastName]]
@@ -124,15 +125,18 @@
 
     <div style="position:relative">
       <vaadin-button class="add-button" on-tap="add" theme="icon primary">
-          <iron-icon icon="vaadin:plus"></iron-icon>
+        <iron-icon icon="vaadin:plus"></iron-icon>
       </vaadin-button>
     </div>
-    
-    <paper-toast id="demoWarn" 
-                 class="fit-bottom"
-                 text="Unable to find remote nor locale database, install demo mode?"
-                 duration="0">
-      <vaadin-button on-tap="_installDemo" theme="tertiary" style="color:red;">Run Demo</vaadin-button>
+
+    <paper-toast
+      id="demoWarn" 
+      class="fit-bottom"
+      text="Unable to find remote nor locale database, install demo mode?"
+      duration="0">
+      <vaadin-button on-tap="_installDemo" theme="tertiary" style="color:red;">
+        Run Demo
+      </vaadin-button>
     </paper-toast>
   </template>
 
@@ -235,7 +239,7 @@
               var data = [];
               if(currentDocs.length > 0) {
                 this.localDB.bulkGet({
-                    docs: currentDocs,
+                  docs: currentDocs,
                 }).then(json => {
                   for(var i=0; i<json.results.length; i++) {
                     data[i] = json.results[i].docs[0].ok;
@@ -380,16 +384,17 @@
           // TODO: Fix custom search
           this.localDB.search({
             query: value,
-            fields: ['firstName',
-                    'lastName',
-                    'address.street',
-                    'address.city',
-                    'address.state',
-                    'address.zip',
-                    'address.country',
-                    'address.phone',
-                    'address.email'
-                    ],
+            fields: [
+              'firstName',
+              'lastName',
+              'address.street',
+              'address.city',
+              'address.state',
+              'address.zip',
+              'address.country',
+              'address.phone',
+              'address.email'
+            ],
             highlighting: true,
             highlighting_pre: '<span class="search-highlight">',
             highlighting_post: '</span>'

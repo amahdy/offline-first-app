@@ -21,7 +21,7 @@
         display: block;
       }
 
-      /* expected to be fixed in vaadin-button 1.0.5 */
+      /* TODO: expected to be fixed in vaadin-button 1.0.5 */
       vaadin-button[hidden] {
         display: none;
       }
@@ -72,7 +72,6 @@
       },
 
       setPerson: function(person) {
-
         // Only focus when editing or manually adding.
         // Don't focus on first load of the page.
         // Don't focus after de-selection.
@@ -114,6 +113,7 @@
           this.fire(this.isUpdate ? 'on-update' : 'on-create', {newPerson: this.person});
         }else {
           // UI will notify of validation error.
+          this.$.firstName.blur();
         }
       },
 
