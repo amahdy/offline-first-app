@@ -279,7 +279,7 @@
       },
 
       _installDemo: function() {
-        $.get('/src/resources/data.json', data => {
+        $.get('src/resources/data.json', data => {
           this.localDB.bulkDocs(data.result).then(create => {
             location.reload();
           }).catch(insertErr => {
