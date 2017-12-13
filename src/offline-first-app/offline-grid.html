@@ -204,10 +204,9 @@
         this.fire('on-select', {selected: this._getSelectedItem()});
       },
 
-      _refreshGrid: function() {
-        // TODO: Problem when clicking on update twice
+      _refreshGrid: function(newPerson) {
+        this._setSelectedItem(newPerson);
         this.$.lazyGrid.clearCache();
-        this._selectedItemsChanged();
         this.$.lazyGrid._scrollToIndex(this._getSelectedItem().idx);
       },
 
@@ -341,7 +340,11 @@
 
       update: function(newPerson) {
         this.localDB.put(newPerson).then(response => {
-          this._refreshGrid();
+          // TODO: Bug? Grid does not update selectedItems after clearCache
+          // https://github.com/vaadin/vaadin-grid/issues/1153
+          newPerson._rev = response.rev;
+
+          this._refreshGrid(newPerson);
         });
       },
 
@@ -354,8 +357,9 @@
           this.size = this.allDocs.length;
           newPerson.idx = 0;
           newPerson._id = response.id;
-          this._setSelectedItem(newPerson);
-          this._refreshGrid();
+          newPerson._rev = response.rev;
+
+          this._refreshGrid(newPerson);
         });
       },
 
