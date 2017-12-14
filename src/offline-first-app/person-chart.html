@@ -53,7 +53,7 @@
             "Connecticut", "Delaware", "Florida", "Georgia", "Indiana", "Maine",
             "Maryland", "Massachusetts", "Michigan", "New Hampshire", "New Jersey",
             "New York", "North Carolina", "Ohio", "Pennsylvania", "Rhode Island",
-            "South Carolina", "Vermont", "Virginia", "Washington D.C.", "West Virginia"
+            "South Carolina", "Vermont", "Virginia", "District of Columbia", "West Virginia"
           ],
           "UNKNOWN": ["unknown", "undefined"]
         }
@@ -64,10 +64,13 @@
         for(var zone in this.timezones) {
           for(var state in stateStats) {
             if(this.timezones[zone].indexOf(state) > -1) {
+              var count = stateStats[state];
+              // TODO: no need to iterate over this again
+              // delete stateStats[state];
               if(currentData[zone]) {
-                currentData[zone]++;
+                currentData[zone]+=count;
               }else {
-                currentData[zone] = 1;
+                currentData[zone]=count;
               }
             }
           }
