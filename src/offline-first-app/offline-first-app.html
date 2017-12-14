@@ -108,6 +108,10 @@
           this.$.offlineGrid.create(evt.detail.newPerson);
         });
 
+        this.$.editor.addEventListener('on-delete', evt => {
+          this.$.offlineGrid.delete(evt.detail.person);
+        });
+
         this.$.search.addEventListener('on-find', evt => {
           this.$.offlineGrid.search(evt.detail.value);
         });

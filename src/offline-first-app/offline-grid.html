@@ -175,6 +175,8 @@
 
         size: Number, // Size of total rows in the grid.
 
+        searchValue: String, // Last known search vlaue.
+
         searchResults: Array, // Filter grid based on those results.
 
         stateStats: {
@@ -208,10 +210,17 @@
         this.fire('on-select', {selected: this._getSelectedItem()});
       },
 
-      _refreshGrid: function(newPerson) {
-        this._setSelectedItem(newPerson);
-        this.$.lazyGrid.clearCache();
-        this.$.lazyGrid._scrollToIndex(this._getSelectedItem().idx);
+      _refreshGrid: function(selectedPerson) {
+        this._setSelectedItem(selectedPerson);
+        // Search will perform the refresh, no need to duplicate
+        if(this.searchValue) {
+          this.search(this.searchValue, selectedPerson);
+        }else {
+          this.$.lazyGrid.clearCache();
+        }
+        if(selectedPerson) {
+          this.$.lazyGrid._scrollToIndex(this._getSelectedItem().idx);
+        }
       },
 
       _loadData: function() {
@@ -225,12 +234,12 @@
         this.localDB.allDocs({endkey: '_design'}).then(eResult => {
           this.localDB.allDocs({startkey: '_design\uffff'}).then(sResult => {
             this.allDocs = eResult.rows.concat(sResult.rows);
-            this.size = this.allDocs.length;
 
             this.dataProvider = (params, callback) => {
 
               var currentIndex = params.page * params.pageSize;
-              var usedDocs = this.searchResults ? this.searchResults : this.allDocs;
+              var usedDocs = this.searchValue ? this.searchResults : this.allDocs;
+              this.size = usedDocs.length;
 
               // Construct docs starting from current index,
               // and up to the requested length by Grid.
@@ -250,7 +259,7 @@
                     // Update stats
                     if(this.stateStatsIds.indexOf(data[i]._id)<0) {
                       this.stateStatsIds.push(data[i]._id);
-                      if(data[i].address) {
+                      if(data[i].address.state) {
                         if(this.stateStats[data[i].address.state]) {
                           this.stateStats[data[i].address.state]++;
                         }else {
@@ -263,20 +272,21 @@
                           this.stateStats["unknown"] = 1;
                         }
                       }
-                      this._stateStatsChanged();
                     }
 
                     // Hilight docs in search mode
-                    if(this.searchResults && currentDocs[i].highlighting) {
+                    if(this.searchValue && currentDocs[i].highlighting) {
                       for (prop in currentDocs[i].highlighting) {
                         var highlightKey = 'highlight_' + prop.replace('.', '_');
                         data[i][highlightKey] = currentDocs[i].highlighting[prop];
                       }
                     }
                   }
+                  this._stateStatsChanged();
                   callback(data);
                 });
               }else {
+                this._stateStatsChanged();
                 callback(data);
               }
             }
@@ -362,23 +372,55 @@
           this.allDocs.unshift({
             id: response.id
           });
-          this.size = this.allDocs.length;
           newPerson.idx = 0;
           newPerson._id = response.id;
           newPerson._rev = response.rev;
+
+          // Update stats
+          this.stateStatsIds.push(newPerson._id);
+          // TODO: Add possibility to chose state ..etc
+          if(this.stateStats["unknown"]) {
+            this.stateStats["unknown"]++;
+          }else {
+            this.stateStats["unknown"] = 1;
+          }
 
           this._refreshGrid(newPerson);
         });
       },
 
-      search: function(value) {
+      delete: function(person) {
+        this.localDB.remove(person).then(response => {
+          // Empty local properties
+          this.allDocs.splice(this.allDocs.findIndex(e => e.id==response.id), 1);
+          this.stateStatsIds.splice(person._id, 1);
+
+          // Cleanup stats
+          if(person.address.state) {
+            this.stateStats[person.address.state]--;
+            if(this.stateStats[person.address.state]==0) {
+              delete this.stateStats[person.address.state];
+            }
+          }else {
+            this.stateStats["unknown"]--;
+            if(this.stateStats["unknown"]==0) {
+              delete this.stateStats["unknown"];
+            }
+          }
+
+          this._refreshGrid(null);
+        });
+      },
+
+      search: function(value, selection=null) {
+        this.searchValue = value;
+
         // Make sure to unselect any selected item
-        this._setSelectedItem(null);
+        this._setSelectedItem(selection);
 
         // Reset chart
         this.stateStatsIds = new Array();
         this.stateStats = {};
-        this._stateStatsChanged();
 
         if(value) {
           // TODO: Fix custom search
@@ -400,7 +442,6 @@
             highlighting_post: '</span>'
           }).then(response => {
             this.searchResults = response.rows;
-            this.size = response.total_rows;
             this.$.lazyGrid.clearCache();
           }).catch(function (err) {
             // TODO: Handle error
