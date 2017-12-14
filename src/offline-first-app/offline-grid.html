@@ -89,10 +89,10 @@
         <template>
           <span class="grid-cell">
             <template is="dom-if" if="[[item.highlight_address_phone]]">
-              <span inner-H-T-M-L="[[item.highlight_address_phone]]"></span>
+              <span inner-H-T-M-L="[[_formatPhone(item.highlight_address_phone)]]"></span>
             </template>
             <template is="dom-if" if="[[!item.highlight_address_phone]]">
-              [[item.address.phone]]
+              [[_formatPhone(item.address.phone)]]
             </template>
           </span>
         </template>
@@ -314,6 +314,10 @@
 
       _stateStatsChanged: function() {
         this.fire('on-stats', {stateStates: this.stateStats});
+      },
+
+      _formatPhone(phoneNumber) {
+        return phoneNumber.replace(/(\d{3})(\d{3})(.*)/, "($1) $2-$3");
       },
 
       ready: function() {
