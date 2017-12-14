@@ -22,7 +22,7 @@
         display: block;
       }
 
-      #lazyGrid {
+      .data-area {
         height: 100%;
         width: 100%;
       }
@@ -54,14 +54,19 @@
 
     <iron-media-query query="(min-width: 600px)" query-matches="{{wide}}"></iron-media-query>
 
-    <vaadin-grid 
+    <template is="dom-if" if="{{!size}}">
+      <center class="data-area"><strong>No Contacts Found</strong></center>
+    </template>
+    <vaadin-grid
       id="lazyGrid"
+      class="data-area"
       aria-label="Offline Grid"
       data-provider="[[dataProvider]]"
       active-item="{{activeItem}}"
       selected-items="{{selectedItems}}"
       item-id-path="_id"
-      size="[[size]]">
+      size="[[size]]"
+      hidden$="{{!size}}">
 
       <vaadin-grid-column class="main-col" wide-layout$="{{wide}}">
         <template class="header">Name</template>
@@ -119,7 +124,6 @@
           </span>
         </template>
       </vaadin-grid-column>
-
     </vaadin-grid>
 
     <div style="position:relative">
@@ -172,7 +176,11 @@
 
         allDocs: Array, // All docs in the grid.
 
-        size: Number, // Size of total rows in the grid.
+        // Size of total rows in the grid.
+        size: {
+          type: Number,
+          value: 0
+        },
 
         searchValue: String, // Last known search vlaue.
 
