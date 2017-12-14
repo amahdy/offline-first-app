@@ -28,7 +28,7 @@
     </style>
 
     <div id="topLayout">
-      <vaadin-text-field autofocus placeholder="Search.." id="search" value="{{value}}">
+      <vaadin-text-field autofocus on-keyup="find" placeholder="Search.." id="search" value="{{value}}">
         <template is="dom-if" if="[[value]]">
           <vaadin-button tabindex="-1" theme="icon small contrast tertiary" on-tap="clear" slot="suffix">
             <iron-icon icon="valo:cross"></iron-icon>
