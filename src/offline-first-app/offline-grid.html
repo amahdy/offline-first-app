@@ -92,10 +92,10 @@
         <template class="header">Phone</template>
         <template>
           <span class="grid-cell">
-            <template is="dom-if" if="[[item.highlight_address_phone]]">
-              <span inner-H-T-M-L="[[_formatPhone(item.highlight_address_phone)]]"></span>
+            <template is="dom-if" if="[[item.address.highlight_phone]]">
+              <span inner-H-T-M-L="[[_formatPhone(item.address.highlight_phone)]]"></span>
             </template>
-            <template is="dom-if" if="[[!item.highlight_address_phone]]">
+            <template is="dom-if" if="[[!item.address.highlight_phone]]">
               [[_formatPhone(item.address.phone)]]
             </template>
           </span>
@@ -106,19 +106,19 @@
         <template class="header">Address</template>
         <template>
           <span class="grid-cell">
-            <template is="dom-if" if="[[item.highlight_address_street]]">
-              <span inner-H-T-M-L="[[item.highlight_address_street]]"></span>
+            <template is="dom-if" if="[[item.address.highlight_street]]">
+              <span inner-H-T-M-L="[[item.address.highlight_street]]"></span>
             </template>
-            <template is="dom-if" if="[[!item.highlight_address_street]]">
+            <template is="dom-if" if="[[!item.address.highlight_street]]">
               [[item.address.street]]
             </template>
             <template is="dom-if" if="[[item.address.city]]">
               ,
             </template>
-            <template is="dom-if" if="[[item.highlight_address_city]]">
-              <span inner-H-T-M-L="[[item.highlight_address_city]]"></span>
+            <template is="dom-if" if="[[item.address.highlight_city]]">
+              <span inner-H-T-M-L="[[item.address.highlight_city]]"></span>
             </template>
-            <template is="dom-if" if="[[!item.highlight_address_city]]">
+            <template is="dom-if" if="[[!item.address.highlight_city]]">
               [[item.address.city]]
             </template>
           </span>
@@ -282,10 +282,21 @@
                     }
 
                     // Hilight docs in search mode
-                    if(this.searchValue && currentDocs[i].highlighting) {
-                      for (prop in currentDocs[i].highlighting) {
-                        var highlightKey = 'highlight_' + prop.replace('.', '_');
-                        data[i][highlightKey] = currentDocs[i].highlighting[prop];
+                    // if(this.searchValue && currentDocs[i].highlighting) {
+                    //   for (prop in currentDocs[i].highlighting) {
+                    //     var highlightKey = 'highlight_' + prop.replace('.', '_');
+                    //     data[i][highlightKey] = currentDocs[i].highlighting[prop];
+                    //   }
+                    // }
+                    if(this.searchValue) {
+                      for(prop in data[i]) {
+                        if(prop == "address") {
+                          for(subProp in data[i][prop]) {
+                            this._formatHighlight(data[i][prop], subProp);
+                          }
+                        }else if(prop != "idx") {
+                          this._formatHighlight(data[i], prop);
+                        }
                       }
                     }
                   }
@@ -324,7 +335,19 @@
       },
 
       _formatPhone(phoneNumber) {
+        // TODO: does not format if highlighted in search
         return phoneNumber.replace(/(\d{3})(\d{3})(.*)/, "($1) $2-$3");
+      },
+
+      _formatHighlight(data, prop, highlightKey) {
+        var expression = RegExp(this.searchValue, 'i'); // TODO: use /g/ to highlight all
+        if(match = data[prop].match(expression)) {
+          var highlight = data[prop].replace(
+            expression,
+            '<span class="search-highlight">' + match[0] + '</span>'
+          );
+          data['highlight_' + prop] = highlight;
+        }
       },
 
       ready: function() {
