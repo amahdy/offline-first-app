@@ -1,6 +1,12 @@
-# Offline-First App with WebComponents
+# Offline-First App with Web Components
+
+A concept of an app built with Web Components, with possibilities to query and manipulate data, and works totally offline.
+
+You can try the [online demo](https://amahdy.github.io/offline-first-app/?demo), and you can also [reset the local modifications](https://amahdy.github.io/offline-first-app/?resetdemo) at anytime.
 
 ![App Preview](./readme_files/preview.png)
+
+![App Preview in Mobile](./readme_files/preview_mobile.png)
 
 ## Step by step, building similar app
 Here is a guide showing git diffs on how this app was built, highlighting:
@@ -35,7 +41,7 @@ Those steps are only *the base* for creating a similar app, always check the `ma
 
 ## Try out this application
 
-Make sure you have [Bower](https://bower.io) and [Polymer CLI](https://www.npmjs.com/package/polymer-cli) installed, also make sure you have a local [CouchDB](http://couchdb.apache.org) running. Clone this project locally then:
+Make sure you have [Bower](https://bower.io) and [Polymer CLI](https://www.npmjs.com/package/polymer-cli) installed. Clone this project locally then:
 
 ### Installing Dependencies
 
@@ -51,9 +57,18 @@ Start the application on port 8080
 $ polymer serve --port 8080
 ```
 
+### Running Demo Mode
+
+The app comes with a simple demo mode to run right away without a remote database. Usually you will be prompt to run the demo mode if no databases were found. You can also use the following arguments to explicitly request a demo mode:
+
+- `?demo` Run demo mode:
+[http://localhost:8080/?demo](http://localhost:8080/?demo)
+- `?resetdemo` Reset demo mode:
+[http://localhost:8080/?resetdemo](http://localhost:8080/?resetdemo)
+
 ### Configuring Database
 
-Create a database `persondb` inside CouchDB and fill it with dummy data or reset the existing one. You can do this by visiting the local [setup page http://localhost:8080/setup.html](http://localhost:8080/setup.html).
+You can run this app with a remote database as well, make sure you have a local [CouchDB](http://couchdb.apache.org) running, then create a database `persondb` inside CouchDB and fill it with dummy data or reset the existing one. Alternatively, you can create the database and fill it with dummy data by visiting the local [setup page http://localhost:8080/setup.html](http://localhost:8080/setup.html).
 
 ### Viewing Your Application
 
