@@ -45,19 +45,18 @@
   </template>
 
   <script>
-    Polymer({
+    class PersonSearch extends Polymer.Element {
+      static get is() { return 'person-search'; }
 
-      is: 'person-search',
+      find() {
+        this.dispatchEvent(new CustomEvent('on-find', {detail: this.$.search.value}));
+      }
 
-      find : function() {
-        this.fire('on-find', {value: this.$.search.value});
-      },
-
-      clear : function() {
+      clear() {
         this.$.search.value = '';
         this.find();
-      },
-
-    });
+      }
+    }
+    customElements.define(PersonSearch.is, PersonSearch);
   </script>
 </dom-module>
