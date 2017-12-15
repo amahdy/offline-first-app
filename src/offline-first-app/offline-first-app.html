@@ -83,11 +83,12 @@
   </template>
 
   <script>
-    Polymer({
+    class OfflineFirstApp extends Polymer.Element {
+      static get is() { return 'offline-first-app'; }
 
-      is: 'offline-first-app',
+      ready() {
+        super.ready();
 
-      ready: function() {
         this.$.offlineGrid.addEventListener('on-select', evt => {
           this.$.editor.setPerson(evt.detail);
         });
@@ -115,8 +116,8 @@
         this.$.search.addEventListener('on-find', evt => {
           this.$.offlineGrid.search(evt.detail);
         });
-      },
-
-    });
+      }
+    }
+    customElements.define(OfflineFirstApp.is, OfflineFirstApp);
   </script>
 </dom-module>
