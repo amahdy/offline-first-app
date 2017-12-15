@@ -385,7 +385,13 @@
       update: function(newPerson) {
         // Cleanup before storing
         for(prop in newPerson) {
-          if(prop.startsWith('highlight_')) {
+          if(prop=="address") {
+            for(subProp in newPerson[prop]) {
+              if(subProp.startsWith('highlight_')) {
+                delete newPerson[prop][subProp];
+              }
+            }
+          }else if(prop.startsWith('highlight_')) {
             delete newPerson[prop];
           }
         }
