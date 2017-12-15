@@ -144,62 +144,63 @@
   </template>
 
   <script>
-    Polymer({
+    class OfflineGrid extends Polymer.Element {
+      static get is() { return 'offline-grid'; }
 
-      is: 'offline-grid',
+      static get properties() {
+        return {
+          demoMode: {
+            type: Boolean,
+            value: false
+          },
 
-      properties: {
-        demoMode: {
-          type: Boolean,
-          value: false
-        },
+          activeItem: {
+            observer: '_activeItemChanged',
+          },
 
-        activeItem: {
-          observer: '_activeItemChanged',
-        },
+          selectedItems: {
+            observer: '_selectedItemsChanged',
+          },
 
-        selectedItems: {
-          observer: '_selectedItemsChanged',
-        },
+          // Remote DB, running on a local instance of CouchDB.
+          remoteDB: {
+            type: PouchDB,
+            value: new PouchDB('http://localhost:5984/personsdb'),
+          },
 
-        // Remote DB, running on a local instance of CouchDB.
-        remoteDB: {
-          type: PouchDB,
-          value: new PouchDB('http://localhost:5984/personsdb'),
-        },
+          // Local DB, the synched version of `remoteDB`
+          localDB: {
+            type: PouchDB,
+            value: new PouchDB('local_personsdb'),
+          },
 
-        // Local DB, the synched version of `remoteDB`
-        localDB: {
-          type: PouchDB,
-          value: new PouchDB('local_personsdb'),
-        },
+          allDocs: Array, // All docs in the grid.
 
-        allDocs: Array, // All docs in the grid.
+          // Size of total rows in the grid.
+          size: {
+            type: Number,
+            value: 0
+          },
 
-        // Size of total rows in the grid.
-        size: {
-          type: Number,
-          value: 0
-        },
+          searchValue: String, // Last known search vlaue.
 
-        searchValue: String, // Last known search vlaue.
+          searchResults: Array, // Filter grid based on those results.
 
-        searchResults: Array, // Filter grid based on those results.
+          stateStats: {
+            type: Object,
+            value: {}
+          },
 
-        stateStats: {
-          type: Object,
-          value: {}
-        },
-
-        stateStatsIds: {
-          type: Array,
-          value: []
-        },
-      },
+          stateStatsIds: {
+            type: Array,
+            value: []
+          },
+        }
+      }
 
       _getSelectedItem() {
         return this.selectedItems[0];
-      },
+      }
 
       _setSelectedItem(selectedItem) {
         if(selectedItem) {
@@ -207,17 +208,17 @@
         }else {
           this.selectedItems = [];
         }
-      },
+      }
 
-      _activeItemChanged: function(activeItem) {
+      _activeItemChanged(activeItem) {
         this._setSelectedItem(activeItem);
-      },
+      }
 
-      _selectedItemsChanged: function() {
-        this.fire('on-select', {selected: this._getSelectedItem()});
-      },
+      _selectedItemsChanged() {
+        this.dispatchEvent(new CustomEvent('on-select', {detail: this._getSelectedItem()}));
+      }
 
-      _refreshGrid: function(selectedPerson) {
+      _refreshGrid(selectedPerson) {
         this._setSelectedItem(selectedPerson);
         // Search will perform the refresh, no need to duplicate
         if(this.searchValue) {
@@ -228,9 +229,9 @@
         if(selectedPerson) {
           this.$.lazyGrid._scrollToIndex(this._getSelectedItem().idx);
         }
-      },
+      }
 
-      _loadData: function() {
+      _loadData() {
         if(!this.demoMode)
         PouchDB.sync(this.remoteDB, this.localDB, {
           live: true,
@@ -289,9 +290,9 @@
                     //   }
                     // }
                     if(this.searchValue) {
-                      for(prop in data[i]) {
+                      for(var prop in data[i]) {
                         if(prop == "address") {
-                          for(subProp in data[i][prop]) {
+                          for(var subProp in data[i][prop]) {
                             this._formatHighlight(data[i][prop], subProp);
                           }
                         }else if(prop != "idx") {
@@ -310,9 +311,9 @@
             }
           });
         });
-      },
+      }
 
-      _installDemo: function() {
+      _installDemo() {
         $.get('src/resources/data.json', data => {
           this.localDB.bulkDocs(data.result).then(create => {
             location.href = "./?rundemo";
@@ -320,37 +321,40 @@
             document.write("Failed to create local demo:\n" + insertErr);
           });
         });
-      },
+      }
 
-      _resetDemo: function() {
+      _resetDemo() {
         this.localDB.destroy().then(dest => {
           location.href = "./";
         }).catch(destErr => {
           document.write("Can't destroy local database:\n" + destErr);
         });
-      },
+      }
 
-      _stateStatsChanged: function() {
-        this.fire('on-stats', {stateStates: this.stateStats});
-      },
+      _stateStatsChanged() {
+        this.dispatchEvent(new CustomEvent('on-stats', {detail: this.stateStats}));
+      }
 
       _formatPhone(phoneNumber) {
         // TODO: does not format if highlighted in search
         return phoneNumber.replace(/(\d{3})(\d{3})(.*)/, "($1) $2-$3");
-      },
+      }
 
       _formatHighlight(data, prop, highlightKey) {
         var expression = RegExp(this.searchValue, 'i'); // TODO: use /g/ to highlight all
-        if(match = data[prop].match(expression)) {
+        var match = data[prop].match(expression);
+        if(match) {
           var highlight = data[prop].replace(
             expression,
             '<span class="search-highlight">' + match[0] + '</span>'
           );
           data['highlight_' + prop] = highlight;
         }
-      },
+      }
 
-      ready: function() {
+      ready() {
+        super.ready();
+
         // Check if demo reset is requested
         if(location.href.endsWith("?resetdemo")) {
           this._resetDemo();
@@ -380,13 +384,13 @@
             this._loadData();
           }
         });
-      },
+      }
 
-      update: function(newPerson) {
+      update(newPerson) {
         // Cleanup before storing
-        for(prop in newPerson) {
+        for(var prop in newPerson) {
           if(prop=="address") {
-            for(subProp in newPerson[prop]) {
+            for(var subProp in newPerson[prop]) {
               if(subProp.startsWith('highlight_')) {
                 delete newPerson[prop][subProp];
               }
@@ -406,9 +410,9 @@
 
           this._refreshGrid(newPerson);
         });
-      },
+      }
 
-      create: function(newPerson) {
+      create(newPerson) {
         this.localDB.post(newPerson).then(response => {
           // Insert in the begining
           this.allDocs.unshift({
@@ -429,9 +433,9 @@
 
           this._refreshGrid(newPerson);
         });
-      },
+      }
 
-      delete: function(person) {
+      delete(person) {
         this.localDB.remove(person).then(response => {
           // Empty local properties
           this.allDocs.splice(this.allDocs.findIndex(e => e.id==response.id), 1);
@@ -452,9 +456,9 @@
 
           this._refreshGrid(null);
         });
-      },
+      }
 
-      search: function(value, selection=null) {
+      search(value, selection=null) {
         this.searchValue = value;
 
         // Make sure to unselect any selected item
@@ -515,15 +519,15 @@
           this.size = this.allDocs.length;
           this.$.lazyGrid.clearCache();
         }
-      },
+      }
 
-      add: function() {
+      add() {
         // Clear selection first
         this._setSelectedItem(null);
 
-        this.fire('on-add');
-      },
-
-    });
+        this.dispatchEvent(new CustomEvent('on-add'));
+      }
+    }
+    customElements.define(OfflineGrid.is, OfflineGrid);
   </script>
 </dom-module>

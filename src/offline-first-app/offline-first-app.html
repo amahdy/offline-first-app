@@ -89,7 +89,7 @@
 
       ready: function() {
         this.$.offlineGrid.addEventListener('on-select', evt => {
-          this.$.editor.setPerson(evt.detail.selected);
+          this.$.editor.setPerson(evt.detail);
         });
 
         this.$.offlineGrid.addEventListener('on-add', evt => {
@@ -97,7 +97,7 @@
         });
 
         this.$.offlineGrid.addEventListener('on-stats', evt => {
-          this.$.chart.updateStats(evt.detail.stateStates);
+          this.$.chart.updateStats(evt.detail);
         });
 
         this.$.editor.addEventListener('on-update', evt => {
