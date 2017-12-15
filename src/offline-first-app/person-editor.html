@@ -51,27 +51,28 @@
   </template>
 
   <script>
-    Polymer({
+    class PersonEditor extends Polymer.Element {
+      static get is() { return 'person-editor'; }
 
-      is: 'person-editor',
+      static get properties() {
+        return {
+          person: {
+            type: Object,
+            value: {address: {}}
+          },
+  
+          isUpdate: {
+            type: Boolean,
+            value: false
+          },
+        }
+      }
 
-      properties: {
-        person: {
-          type: Object,
-          value: {address: {}}
-        },
-
-        isUpdate: {
-          type: Boolean,
-          value: false
-        },
-      },
-
-      setFocus: function() {
+      setFocus() {
         this.$.firstName.focus();
-      },
+      }
 
-      setPerson: function(person) {
+      setPerson(person) {
         // Only focus when editing or manually adding.
         // Don't focus on first load of the page.
         // Don't focus after de-selection.
@@ -100,9 +101,9 @@
           this.$.address.value = '';
           this.isUpdate = false;
         }
-      },
+      }
 
-      update: function() {
+      update() {
         if(this.$.firstName.validate()) {
           this.person.firstName = this.$.firstName.value;
           this.person.lastName = this.$.lastName.value;
@@ -110,17 +111,18 @@
           this.person.email = this.$.email.value;
           this.person.address.street = this.$.address.value;
 
-          this.fire(this.isUpdate ? 'on-update' : 'on-create', {newPerson: this.person});
+          this.dispatchEvent(new CustomEvent(
+            this.isUpdate ? 'on-update' : 'on-create', {detail: this.person}));
         }else {
           // UI will notify of validation error.
           this.$.firstName.blur();
         }
-      },
+      }
 
-      delete: function() {
-        this.fire('on-delete', {person: this.person});
-      },
-
-    });
+      delete() {
+        this.dispatchEvent(new CustomEvent('on-delete', {detail: this.person}));
+      }
+    }
+    customElements.define(PersonEditor.is, PersonEditor);
   </script>
 </dom-module>
