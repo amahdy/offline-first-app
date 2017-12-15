@@ -395,12 +395,14 @@
             delete newPerson[prop];
           }
         }
+        var idx = newPerson.idx;
         delete newPerson.idx;
 
         this.localDB.put(newPerson).then(response => {
           // TODO: Bug? Grid does not update selectedItems after clearCache
           // https://github.com/vaadin/vaadin-grid/issues/1153
           newPerson._rev = response.rev;
+          newPerson.idx = idx;
 
           this._refreshGrid(newPerson);
         });
