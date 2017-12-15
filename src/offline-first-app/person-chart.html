@@ -28,38 +28,40 @@
   </template>
 
   <script>
-    Polymer({
+    class PersonChart extends Polymer.Element {
+      static get is() { return 'person-chart'; }
 
-      is: 'person-chart',
+      static get properties() {
+        return {
+          data: {
+            type: Array
+          },
 
-      properties: {
-        data: {
-          type: Array
+          timezones: {
+            type: Object,
+            value: {
+              "CST": [
+                "Alabama", "Arkansas", "Illinois", "Iowa", "Kansas", "Kentucky",
+                "Louisiana", "Minnesota", "Mississippi", "Missouri", "Nebraska",
+                "North Dakota", "Oklahoma", "South Dakota", "Tennessee", "Texas", "Wisconsin"
+              ],
+              "AKST": ["Alaska"],
+              "HST": ["Aleutian Islands", "Hawaii"],
+              "MST": ["Arizona", "Colorado", "Idaho", "Montana", "New Mexico", "Utah", "Wyoming"],
+              "PST": ["California", "Nevada", "Oregon", "Washington"],
+              "EST": [
+                "Connecticut", "Delaware", "Florida", "Georgia", "Indiana", "Maine",
+                "Maryland", "Massachusetts", "Michigan", "New Hampshire", "New Jersey",
+                "New York", "North Carolina", "Ohio", "Pennsylvania", "Rhode Island",
+                "South Carolina", "Vermont", "Virginia", "District of Columbia", "West Virginia"
+              ],
+              "UNKNOWN": ["unknown"]
+            }
+          }
         }
-      },
+      }
 
-      ready: function() {
-        this.timezones = {
-          "CST": [
-            "Alabama", "Arkansas", "Illinois", "Iowa", "Kansas", "Kentucky",
-            "Louisiana", "Minnesota", "Mississippi", "Missouri", "Nebraska",
-            "North Dakota", "Oklahoma", "South Dakota", "Tennessee", "Texas", "Wisconsin"
-          ],
-          "AKST": ["Alaska"],
-          "HST": ["Aleutian Islands", "Hawaii"],
-          "MST": ["Arizona", "Colorado", "Idaho", "Montana", "New Mexico", "Utah", "Wyoming"],
-          "PST": ["California", "Nevada", "Oregon", "Washington"],
-          "EST": [
-            "Connecticut", "Delaware", "Florida", "Georgia", "Indiana", "Maine",
-            "Maryland", "Massachusetts", "Michigan", "New Hampshire", "New Jersey",
-            "New York", "North Carolina", "Ohio", "Pennsylvania", "Rhode Island",
-            "South Carolina", "Vermont", "Virginia", "District of Columbia", "West Virginia"
-          ],
-          "UNKNOWN": ["unknown"]
-        }
-      },
-
-      updateStats: function(stateStats) {
+      updateStats(stateStats) {
         var currentData = new Array();
         for(var zone in this.timezones) {
           for(var state in stateStats) {
@@ -77,8 +79,8 @@
         }
 
         this.data = Object.entries(currentData);
-      },
-
-    });
+      }
+    }
+    customElements.define(PersonChart.is, PersonChart);
   </script>
 </dom-module>
