@@ -4,27 +4,27 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
-    <title>offline-first-app test</title>
+    <title>person-search test</title>
 
     <script src="../../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
     <script src="../../../bower_components/web-component-tester/browser.js"></script>
 
-    <link rel="import" href="../../src/offline-first-app/offline-first-app.html">
+    <link rel="import" href="../../src/offline-first-app/person-search.html">
   </head>
   <body>
 
     <test-fixture id="Basic">
       <template>
-        <offline-first-app></offline-first-app>
+        <person-search></person-search>
       </template>
     </test-fixture>
 
     <script>
-      suite('offline-first-app', () => {
+      suite('person-search', () => {
         test('Instantiating the element works', () => {
           const element = fixture('Basic');
           const elementShadowRoot = element.shadowRoot;
-          const elementTopLayout = elementShadowRoot.querySelector('vaadin-split-layout');
+          const elementTopLayout = elementShadowRoot.querySelector('div');
           assert.equal(elementTopLayout.id, 'topLayout');
         });
       });
