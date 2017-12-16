@@ -6,23 +6,26 @@
 
     <title>offline-first-app test</title>
 
-    <script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="../../../web-component-tester/browser.js"></script>
+    <script src="../../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../../bower_components/web-component-tester/browser.js"></script>
 
     <link rel="import" href="../../src/offline-first-app/offline-first-app.html">
   </head>
   <body>
-    <test-fixture id="basic">
+
+    <test-fixture id="Basic">
       <template>
         <offline-first-app></offline-first-app>
       </template>
     </test-fixture>
 
     <script>
-      suite('offline-first-app', function() {
-        test('instantiating the element works', function() {
-          var element = fixture('basic');
-          assert.equal(element.is, 'offline-first-app');
+      suite('offline-first-app', () => {
+        test('instantiating the element works', () => {
+          const element = fixture('Basic');
+          const elementShadowRoot = element.shadowRoot;
+          const elementTopLayout = elementShadowRoot.querySelector('vaadin-split-layout');
+          assert.equal(elementTopLayout.id, 'topLayout');
         });
       });
     </script>
