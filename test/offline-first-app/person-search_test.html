@@ -68,9 +68,10 @@
         });
 
         test('toggling reset button', () => {
-          assert(resetBtn.hidden, true);
+          assert.isTrue(resetBtn.hidden);
+          searchField.value = testWord;
           MockInteractions.keyUpOn(searchField);
-          assert(resetBtn.hidden, false);
+          assert.isFalse(resetBtn.hidden);
         });
 
         test('pressing Enter performs search', done => {
