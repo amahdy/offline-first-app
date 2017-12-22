@@ -336,8 +336,10 @@
       }
 
       _formatPhone(phoneNumber) {
-        // TODO: does not format if highlighted in search
-        return phoneNumber.replace(/(\d{3})(\d{3})(.*)/, "($1) $2-$3");
+        if(phoneNumber) {
+          // TODO: does not format if highlighted in search
+          return phoneNumber.replace(/(\d{3})(\d{3})(.*)/, "($1) $2-$3");
+        }
       }
 
       _formatHighlight(data, prop, highlightKey) {

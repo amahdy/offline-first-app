@@ -63,48 +63,50 @@
         }
       }
 
+      _fillForm(person) {
+        if(!person) {
+          person = {};
+        }
+        if(!person.address) {
+          person.address = {};
+        }
+        this.person = person;
+        this.$.firstName.value = person.firstName;
+        this.$.lastName.value = person.lastName;
+        this.$.phone.value = person.address.phone;
+        this.$.email.value = person.email;
+        this.$.address.value = person.address.street;
+      }
+
+      _readForm() {
+        this.person.firstName = this.$.firstName.value;
+        this.person.lastName = this.$.lastName.value;
+        this.person.address.phone = this.$.phone.value;
+        this.person.email = this.$.email.value;
+        this.person.address.street = this.$.address.value;
+      }
+
       setFocus() {
         this.$.firstName.focus();
       }
 
       setPerson(person) {
-
+        this._fillForm(person);
         if(person) {
           // Only focus when editing or manually adding.
           // Don't focus on first load of the page.
           // Don't focus after de-selection.
           this.setFocus();
 
-          this.person = person;
-          if(!person.address) {
-            // TODO: find better fix in case of empty object?
-            this.person.address = {};
-          }
-          this.$.firstName.value = this.person.firstName;
-          this.$.lastName.value = this.person.lastName;
-          this.$.phone.value = this.person.address.phone;
-          this.$.email.value = this.person.email;
-          this.$.address.value = this.person.address.street;
           this.isUpdate = true;
         }else {
-          this.person = {address: {}};
-          this.$.firstName.value = '';
-          this.$.lastName.value = '';
-          this.$.phone.value = '';
-          this.$.email.value = '';
-          this.$.address.value = '';
           this.isUpdate = false;
         }
       }
 
       update() {
         if(this.$.firstName.validate()) {
-          this.person.firstName = this.$.firstName.value;
-          this.person.lastName = this.$.lastName.value;
-          this.person.address.phone = this.$.phone.value;
-          this.person.email = this.$.email.value;
-          this.person.address.street = this.$.address.value;
-
+          this._readForm();
           this.dispatchEvent(new CustomEvent(
             this.isUpdate ? 'on-update' : 'on-create', {detail: this.person}));
         }else {
