@@ -29,13 +29,11 @@
 
     <div id="topLayout">
       <vaadin-text-field autofocus on-keyup="find" placeholder="Search.." id="search" value="{{value}}">
-        <template is="dom-if" if="[[value]]">
-          <vaadin-button tabindex="-1" theme="icon small contrast tertiary" on-tap="clear" slot="suffix">
-            <iron-icon icon="valo:cross"></iron-icon>
-          </vaadin-button>
-        </template>
+        <vaadin-button id="resetBtn" hidden$="{{!value}}" tabindex="-1" theme="icon small contrast tertiary" on-tap="clear" slot="suffix">
+          <iron-icon icon="valo:cross"></iron-icon>
+        </vaadin-button>
       </vaadin-text-field>
-      <vaadin-button theme="icon tertiary" on-tap="find">
+      <vaadin-button id="searchBtn" theme="icon tertiary" on-tap="find">
         <iron-icon icon="valo:magnifier"></iron-icon>
       </vaadin-button>
     </div>
