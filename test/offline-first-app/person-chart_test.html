@@ -21,11 +21,62 @@
 
     <script>
       suite('person-chart', () => {
-        test('Instantiating the element works', () => {
-          const element = fixture('Basic');
-          const elementShadowRoot = element.shadowRoot;
-          const elementTopLayout = elementShadowRoot.querySelector('vaadin-pie-chart');
-          assert.notEqual(elementTopLayout, undefined);
+        setup(() => {
+          element = fixture('Basic');
+          elementShadowRoot = element.shadowRoot;
+        });
+
+        test('instantiating the element works', () => {
+          expect(elementShadowRoot.querySelector('vaadin-pie-chart')).to.exists;
+        });
+
+        test('updating stats works', () => {
+          expect(element.data).to.be.empty;
+
+          // Adding one element works
+          var data = {"California":1};
+          element.updateStats(data);
+          assert(element.data, ["PST", 1]);
+
+          // Old data is not preserved
+          data = {"Alabama":1};
+          element.updateStats(data);
+          assert(element.data, ["CST", 1]);
+
+          // Different data works
+          data = {"Alabama":1,"California":1};
+          element.updateStats(data);
+          assert(element.data, ["PST",1,"CST",1]);
+
+          // Same timezone adds up
+          data = {"Alabama":1,"Mississippi":1};
+          element.updateStats(data);
+          assert(element.data, ["CST", 2]);
+
+          // Empty count does not add up
+          data = {"Utah":5,"Colorado":0};
+          element.updateStats(data);
+          assert(element.data, ["MST", 5]);
+
+          // All timezones are covered
+          data = {"Alaska":5,"South Dakota":3,"Aleutian Islands":7,"Montana":40,"Washington":2,"Pennsylvania":1,"Cairo":77};
+          element.updateStats(data);
+          assert(element.data, ["CST",3,"AKST",5,"HST",7,"MST",40,"PST",2,"EST",1,"UNKNOWN",77]);
+
+          // Wrong data goes to "UNKNOWN"
+          data = {undefined:1,"Cairo":1};
+          element.updateStats(data);
+          assert(element.data, ["UNKNOWN", 2]);
+
+          // Empty data does nothing
+          data = {};
+          element.updateStats(data);
+          assert(element.data, []);
+
+          // Null data does nothing
+          data = null;
+          element.updateStats(data);
+          assert(element.data, []);
         });
       });
     </script>
