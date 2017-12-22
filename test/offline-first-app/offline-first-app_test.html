@@ -136,6 +136,18 @@
             assert.equal(event.detail, "fake-offline-grid-stats");
             done();
           });
+          element.wide=true;
+          offlineGrid.fireStats();
+        });
+
+        test('changing stats in offline-grid does not update chart when hidden', done => {
+          spy = sinon.spy(chart, 'updateStats');
+          offlineGrid.addEventListener('on-stats', event => {
+            expect(spy.called).to.be.false;
+            assert.equal(event.detail, "fake-offline-grid-stats");
+            done();
+          });
+          element.wide=false;
           offlineGrid.fireStats();
         });
 

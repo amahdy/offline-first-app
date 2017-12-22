@@ -245,20 +245,20 @@
 
             this.dataProvider = (params, callback) => {
 
-              var currentIndex = params.page * params.pageSize;
-              var usedDocs = this.searchValue ? this.searchResults : this.allDocs;
+              let currentIndex = params.page * params.pageSize;
+              let usedDocs = this.searchValue ? this.searchResults : this.allDocs;
               this.size = usedDocs.length;
 
               // Construct docs starting from current index,
               // and up to the requested length by Grid.
-              var currentDocs = usedDocs.slice(currentIndex, currentIndex+params.pageSize);
+              let currentDocs = usedDocs.slice(currentIndex, currentIndex+params.pageSize);
 
-              var data = [];
+              let data = [];
               if(currentDocs.length > 0) {
                 this.localDB.bulkGet({
                   docs: currentDocs,
                 }).then(json => {
-                  for(var i=0; i<json.results.length; i++) {
+                  for(let i=0; i<json.results.length; i++) {
                     data[i] = json.results[i].docs[0].ok;
                     // TODO: avoid keeping track of indexes
                     // https://github.com/vaadin/vaadin-grid/issues/1154
@@ -285,14 +285,14 @@
                     // Hilight docs in search mode
                     // if(this.searchValue && currentDocs[i].highlighting) {
                     //   for (prop in currentDocs[i].highlighting) {
-                    //     var highlightKey = 'highlight_' + prop.replace('.', '_');
+                    //     let highlightKey = 'highlight_' + prop.replace('.', '_');
                     //     data[i][highlightKey] = currentDocs[i].highlighting[prop];
                     //   }
                     // }
                     if(this.searchValue) {
-                      for(var prop in data[i]) {
+                      for(let prop in data[i]) {
                         if(prop == "address") {
-                          for(var subProp in data[i][prop]) {
+                          for(let subProp in data[i][prop]) {
                             this._formatHighlight(data[i][prop], subProp);
                           }
                         }else if(prop != "idx") {
@@ -343,10 +343,10 @@
       }
 
       _formatHighlight(data, prop, highlightKey) {
-        var expression = RegExp(this.searchValue, 'i'); // TODO: use /g/ to highlight all
-        var match = data[prop].match(expression);
+        let expression = RegExp(this.searchValue, 'i'); // TODO: use /g/ to highlight all
+        let match = data[prop].match(expression);
         if(match) {
-          var highlight = data[prop].replace(
+          let highlight = data[prop].replace(
             expression,
             '<span class="search-highlight">' + match[0] + '</span>'
           );
@@ -390,9 +390,9 @@
 
       update(newPerson) {
         // Cleanup before storing
-        for(var prop in newPerson) {
+        for(let prop in newPerson) {
           if(prop=="address") {
-            for(var subProp in newPerson[prop]) {
+            for(let subProp in newPerson[prop]) {
               if(subProp.startsWith('highlight_')) {
                 delete newPerson[prop][subProp];
               }
@@ -401,7 +401,7 @@
             delete newPerson[prop];
           }
         }
-        var idx = newPerson.idx;
+        let idx = newPerson.idx;
         delete newPerson.idx;
 
         this.localDB.put(newPerson).then(response => {
@@ -507,7 +507,7 @@
             // this.searchResults = response.rows;
             this.searchResults = response.docs;
             // Seriously? You don't need this in quick-search
-            for(var i in this.searchResults) {
+            for(let i in this.searchResults) {
               this.searchResults[i].id = this.searchResults[i]._id;
               delete this.searchResults[i]._id;
             }

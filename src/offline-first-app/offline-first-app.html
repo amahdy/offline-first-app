@@ -106,7 +106,9 @@
         });
 
         this.$.offlineGrid.addEventListener('on-stats', evt => {
-          this.$.chart.updateStats(evt.detail);
+          if(this.wide) {
+            this.$.chart.updateStats(evt.detail);
+          }
         });
 
         this.$.editor.addEventListener('on-update', evt => {

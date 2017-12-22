@@ -23,7 +23,6 @@
 
     <script>
       suite('person-editor', () => {
-        const spy = sinon.spy();
         const testPerson = {
           "firstName":"Madison",
           "lastName":"Rodriguez",
@@ -188,10 +187,11 @@
           });
 
           // Make sure on-update is not fired
+          let spy = sinon.spy();
           element.addEventListener('on-update', spy);
           expect(spy.called).to.be.false;
 
-          var wrongPerson = {...testPerson};
+          let wrongPerson = {...testPerson};
           wrongPerson.firstName = "";
           element.setPerson(wrongPerson);
           updateBtn.dispatchEvent(new CustomEvent('tap'));
@@ -206,10 +206,11 @@
           });
 
           // Make sure on-update is not fired
+          let spy = sinon.spy();
           element.addEventListener('on-update', spy);
           expect(spy.called).to.be.false;
 
-          var wrongPerson = {...testPerson};
+          let wrongPerson = {...testPerson};
           wrongPerson.firstName = "ab";
           element.setPerson(wrongPerson);
           updateBtn.dispatchEvent(new CustomEvent('tap'));

@@ -36,7 +36,7 @@
           expect(element.data).to.be.empty;
 
           // Adding one element works
-          var data = {"California":1};
+          let data = {"California":1};
           element.updateStats(data);
           assert(element.data, ["PST", 1]);
 

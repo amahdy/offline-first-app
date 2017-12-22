@@ -66,15 +66,15 @@
       }
 
       updateStats(stateStats) {
-        var currentData = new Array();
+        let currentData = new Array();
 
         // Iterates 7 times exactely
-        for(var zone in this.timezones) {
+        for(let zone in this.timezones) {
           // N times, depends on number of data fetched
-          for(var state in stateStats) {
+          for(let state in stateStats) {
             // Max 21 iterations, avg < 3.6 iterations
             if(this.timezones[zone].indexOf(state) > -1) {
-              var count = stateStats[state];
+              let count = stateStats[state];
               if(currentData[zone]) {
                 currentData[zone]+=count;
               }else {
