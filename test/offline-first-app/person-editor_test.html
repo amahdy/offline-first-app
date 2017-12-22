@@ -9,6 +9,8 @@
     <script src="../../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
     <script src="../../../bower_components/web-component-tester/browser.js"></script>
 
+    <link rel="import" href="../../../bower_components/iron-test-helpers/iron-test-helpers.html">
+
     <link rel="import" href="../../src/offline-first-app/person-editor.html">
   </head>
   <body>
@@ -21,11 +23,240 @@
 
     <script>
       suite('person-editor', () => {
-        test('Instantiating the element works', () => {
-          const element = fixture('Basic');
-          const elementShadowRoot = element.shadowRoot;
-          const elementTopLayout = elementShadowRoot.querySelector('vaadin-form-layout');
-          assert.equal(elementTopLayout.className, 'with-text-fields');
+        const spy = sinon.spy();
+        const testPerson = {
+          "firstName":"Madison",
+          "lastName":"Rodriguez",
+          "address":{
+            "street":"7214 Hazy View Manor",
+            "city":"Twodot",
+            "state":"Alabama",
+            "zip":"3584767",
+            "country":"USA",
+            "phone":"20555967"
+          },
+          "email":"madison.rodriguez@company.com"
+        }, modifiedPerson = {
+          "firstName":"Mila",
+          "lastName":"Gonzalez",
+          "address":{
+            "street":"92 Harvest Court",
+            "city":"Chickasawhatchee",
+            "state":"Vermont",
+            "zip":"0589796",
+            "country":"USA",
+            "phone":"80255041"
+          },
+          "email":"mila.gonzalez@company.com"
+        };
+        let element, elementShadowRoot,
+            firstNameField, lastNameField, phoneField, emailField, addressField,
+            updateBtn, delBtn, updateCaption, createCaption;
+
+        setup(() => {
+          element = fixture('Basic');
+          elementShadowRoot = element.shadowRoot;
+          firstNameField = elementShadowRoot.getElementById('firstName');
+          lastNameField = elementShadowRoot.getElementById('lastName');
+          phoneField = elementShadowRoot.getElementById('phone');
+          emailField = elementShadowRoot.getElementById('email');
+          addressField = elementShadowRoot.getElementById('address');
+          updateBtn = elementShadowRoot.getElementById('updateBtn');
+          delBtn = elementShadowRoot.getElementById('delBtn');
+          updateCaption = "Update";
+          createCaption = "Create";
+        });
+
+        test('instantiating the element works', () => { 
+          assert.equal(elementShadowRoot.querySelector('vaadin-form-layout').className, 'with-text-fields');
+        });
+
+        test('filling form works', () => {
+          element._fillForm(testPerson);
+          assert.equal(firstNameField.value, testPerson.firstName);
+          assert.equal(lastNameField.value, testPerson.lastName);
+          assert.equal(phoneField.value, testPerson.address.phone);
+          assert.equal(emailField.value, testPerson.email);
+          assert.equal(addressField.value, testPerson.address.street);
+        });
+
+        test('reading form works', () => {
+          element._fillForm(testPerson);
+          element._readForm();
+          assert.equal(element.person.firstName, testPerson.firstName);
+          assert.equal(element.person.lastName, testPerson.lastName);
+          assert.equal(element.person.address.phone, testPerson.address.phone);
+          assert.equal(element.person.email, testPerson.email);
+          assert.equal(element.person.address.street, testPerson.address.street);
+        });
+
+        test('setting focus works', () => {
+          element.setFocus();
+          assert.isTrue(firstNameField.hasAttribute("focused"));
+        });
+
+        test('setting person with an object', () => {
+          element.setPerson(testPerson);
+
+          // Focuses on firstName field
+          assert.isTrue(firstNameField.hasAttribute("focused"));
+
+          element._readForm();
+
+          // Property `person` is populated
+          assert.equal(element.person, testPerson);
+
+          // Update mode is enabled
+          assert.isTrue(element.isUpdate);
+        });
+
+        test('setting person with null', () => {
+          element.setPerson(null);
+
+          // Looses focus from firstName field
+          assert.isFalse(firstNameField.hasAttribute("focused"));
+
+          element._readForm();
+
+          // Property `person` is reset, firstName undefined is enough
+          assert.isUndefined(element.person.firstName);
+
+          // Create mode is enabled
+          assert.isFalse(element.isUpdate);
+        });
+
+        test('updating person works', done => {
+          element.addEventListener('on-update', event => {
+            assert.equal(event.detail, modifiedPerson);
+            done();
+          });
+          element.setPerson(testPerson);
+          element._fillForm(modifiedPerson);
+          element.update();
+        });
+
+        test('creating person works', done => {
+          element.addEventListener('on-create', event => {
+            assert.equal(event.detail, testPerson);
+            done();
+          });
+          element._fillForm(testPerson);
+          element.update();
+        });
+
+        test('deleting person works', done => {
+          element.addEventListener('on-delete', event => {
+            assert.equal(event.detail, testPerson);
+            done();
+          });
+          element.setPerson(testPerson);
+          element.delete();
+        });
+
+        test('firing event with person value when delete button clicked', done => {
+          element.addEventListener('on-delete', event => {
+            assert.equal(event.detail, testPerson);
+            done();
+          });
+          element.setPerson(testPerson);
+          delBtn.dispatchEvent(new CustomEvent('tap'));
+        });
+
+        test('firing event with person value when update button clicked', done => {
+          element.addEventListener('on-update', event => {
+            assert.equal(event.detail, modifiedPerson);
+            done();
+          });
+          element.setPerson(testPerson);
+          element._fillForm(modifiedPerson);
+          updateBtn.dispatchEvent(new CustomEvent('tap'));
+        });
+
+        test('firing event with person value when create button clicked', done => {
+          element.addEventListener('on-create', event => {
+            assert.equal(event.detail, testPerson);
+            done();
+          });
+          element._fillForm(testPerson);
+          updateBtn.dispatchEvent(new CustomEvent('tap'));
+        });
+
+        test('validating empty first name and falling back with error on UI', done => {
+          updateBtn.addEventListener('tap', event => {
+            assert.isTrue(firstNameField.hasAttribute('invalid'))
+            done();
+          });
+
+          // Make sure on-update is not fired
+          element.addEventListener('on-update', spy);
+          expect(spy.called).to.be.false;
+
+          var wrongPerson = {...testPerson};
+          wrongPerson.firstName = "";
+          element.setPerson(wrongPerson);
+          updateBtn.dispatchEvent(new CustomEvent('tap'));
+        });
+
+        test('validating too short first name and falling back with error on UI', done => {
+          updateBtn.addEventListener('tap', event => {
+            // Validation not triggered automatically?
+            // https://github.com/vaadin/vaadin-text-field/issues/182
+            // assert.isTrue(firstNameField.hasAttribute('invalid'))
+            done();
+          });
+
+          // Make sure on-update is not fired
+          element.addEventListener('on-update', spy);
+          expect(spy.called).to.be.false;
+
+          var wrongPerson = {...testPerson};
+          wrongPerson.firstName = "ab";
+          element.setPerson(wrongPerson);
+          updateBtn.dispatchEvent(new CustomEvent('tap'));
+        });
+
+        test('pressing Enter performs update', done => {
+          element.addEventListener('on-update', event => {
+            assert.equal(event.detail, testPerson);
+            done();
+          });
+          element.setPerson(testPerson);
+          MockInteractions.pressEnter(elementShadowRoot);
+        });
+
+        test('pressing Enter performs create', done => {
+          element.addEventListener('on-create', event => {
+            assert.equal(event.detail, testPerson);
+            done();
+          });
+          element._fillForm(testPerson);
+          MockInteractions.pressEnter(elementShadowRoot);
+        });
+
+        test('toggling update button text', done => {
+          // Setting person switches to update mode
+          element.setPerson(testPerson);
+          flush(() => {
+            assert.equal(updateBtn.innerText, updateCaption);
+
+            // Setting person with null switches to create mode
+            element.setPerson(null);
+            flush(() => {
+              assert.equal(updateBtn.innerText, createCaption);
+
+              done();
+            });
+          });
+        });
+
+        test('toggling delete button', () => {
+          // Setting person allows to delete it
+          element.setPerson(testPerson);
+          assert.isFalse(delBtn.hidden);
+
+          // Setting person with null switches to create mode, so no delete button
+          element.setPerson(null);
+          assert.isTrue(delBtn.hidden);
         });
       });
     </script>
