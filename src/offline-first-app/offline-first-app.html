@@ -24,11 +24,6 @@
         height: 100%;
       }
 
-      /* https://github.com/vaadin/vaadin-valo-theme/issues/43 */
-      #topLayout > * {
-        --valo-size: var(--valo-size-m);
-      }
-
       #offlineGrid {
         margin-left: 8px;
         margin-right: 8px;
@@ -70,14 +65,14 @@
 
     <iron-media-query query="(min-width: 600px)" query-matches="{{wide}}"></iron-media-query>
 
-    <vaadin-split-layout vertical$="{{!wide}}" id="topLayout" theme="subtle">
+    <vaadin-split-layout orientation$="{{orientation}}" id="topLayout" theme="subtle">
       <div id="gridArea" wide-layout$="{{wide}}">
         <person-search id="search"></person-search>
         <offline-grid id="offlineGrid"></offline-grid>
       </div>
       <div id="editorArea" wide-layout$="{{wide}}">
         <person-editor id="editor"></person-editor>
-        <person-chart hidden$="[[!wide]]" id="chart"></person-chart>
+        <person-chart hidden$="{{!wide}}" id="chart"></person-chart>
       </div>
     </vaadin-split-layout>
   </template>
@@ -85,6 +80,19 @@
   <script>
     class OfflineFirstApp extends Polymer.Element {
       static get is() { return 'offline-first-app'; }
+
+      static get properties() {
+        return {
+          wide: {
+            type: Boolean,
+            observer: '_wideChanged'
+          },
+        }
+      }
+
+      _wideChanged() {
+        this.orientation = this.wide ? "horizontal" : "vertical";
+      }
 
       ready() {
         super.ready();
