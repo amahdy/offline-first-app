@@ -30,7 +30,7 @@
       <vaadin-text-area placeholder="Address" id="address"></vaadin-text-area>
     </vaadin-form-layout>
 
-    <vaadin-button on-tap="update">
+    <vaadin-button id="updateBtn" on-tap="update">
       <template is="dom-if" if="[[isUpdate]]">
         Update
       </template>
@@ -38,7 +38,7 @@
         Create
       </template>
     </vaadin-button>
-    <vaadin-button hidden$="[[!isUpdate]]" theme="error" on-tap="delete">
+    <vaadin-button id="delBtn" hidden$="[[!isUpdate]]" theme="error" on-tap="delete">
       Delete
     </vaadin-button>
 
@@ -68,14 +68,13 @@
       }
 
       setPerson(person) {
-        // Only focus when editing or manually adding.
-        // Don't focus on first load of the page.
-        // Don't focus after de-selection.
-        if(person) {
-          this.setFocus();
-        }
 
         if(person) {
+          // Only focus when editing or manually adding.
+          // Don't focus on first load of the page.
+          // Don't focus after de-selection.
+          this.setFocus();
+
           this.person = person;
           if(!person.address) {
             // TODO: find better fix in case of empty object?
