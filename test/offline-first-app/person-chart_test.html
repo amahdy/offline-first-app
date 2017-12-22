@@ -21,6 +21,8 @@
 
     <script>
       suite('person-chart', () => {
+        let element, elementShadowRoot;
+
         setup(() => {
           element = fixture('Basic');
           elementShadowRoot = element.shadowRoot;

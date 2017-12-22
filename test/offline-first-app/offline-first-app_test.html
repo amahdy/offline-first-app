@@ -13,6 +13,71 @@
   </head>
   <body>
 
+    <dom-module id="fake-person-search">
+      <template></template>
+      <script>
+        class FakePersonSearch extends Polymer.Element {
+          static get is() { return 'fake-person-search'; }
+          fireFind() {
+            this.dispatchEvent(new CustomEvent('on-find', {detail: "fake-person-search-find"}));
+          }
+        }
+        customElements.define(FakePersonSearch.is, FakePersonSearch);
+      </script>
+    </dom-module>
+    <dom-module id="fake-offline-grid">
+      <template></template>
+      <script>
+        class FakeOfflineGrid extends Polymer.Element {
+          static get is() { return 'fake-offline-grid'; }
+          fireSelect() {
+            this.dispatchEvent(new CustomEvent('on-select', {detail: "fake-offline-grid-select"}));
+          }
+          fireAdd() {
+            this.dispatchEvent(new CustomEvent('on-add', {detail: "fake-offline-grid-add"}));
+          }
+          fireStats() {
+            this.dispatchEvent(new CustomEvent('on-stats', {detail: "fake-offline-grid-stats"}));
+          }
+          update() {}
+          create() {}
+          delete() {}
+          search() {}
+        }
+        customElements.define(FakeOfflineGrid.is, FakeOfflineGrid);
+      </script>
+    </dom-module>
+    <dom-module id="fake-person-editor">
+      <template></template>
+      <script>
+        class FakePersonEditor extends Polymer.Element {
+          static get is() { return 'fake-person-editor'; }
+          fireUpdate() {
+            this.dispatchEvent(new CustomEvent('on-update', {detail: "fake-person-editor-update"}));
+          }
+          fireCreate() {
+            this.dispatchEvent(new CustomEvent('on-create', {detail: "fake-person-editor-create"}));
+          }
+          fireDelete() {
+            this.dispatchEvent(new CustomEvent('on-delete', {detail: "fake-person-editor-delete"}));
+          }
+          setPerson() {}
+          setFocus() {}
+        }
+        customElements.define(FakePersonEditor.is, FakePersonEditor);
+      </script>
+    </dom-module>
+    <dom-module id="fake-person-chart">
+      <template></template>
+      <script>
+        class FakePersonChart extends Polymer.Element {
+          static get is() { return 'fake-person-chart'; }
+          updateStats() {}
+        }
+        customElements.define(FakePersonChart.is, FakePersonChart);
+      </script>
+    </dom-module>
+
     <test-fixture id="Basic">
       <template>
         <offline-first-app></offline-first-app>
@@ -21,11 +86,126 @@
 
     <script>
       suite('offline-first-app', () => {
-        test('Instantiating the element works', () => {
-          const element = fixture('Basic');
-          const elementShadowRoot = element.shadowRoot;
-          const elementTopLayout = elementShadowRoot.querySelector('vaadin-split-layout');
-          assert.equal(elementTopLayout.id, 'topLayout');
+        let spy,
+            element, elementShadowRoot, splitLayout,
+            search, offlineGrid, editor, chart;
+
+        setup(() => {
+          replace('person-search').with('fake-person-search');
+          replace('offline-grid').with('fake-offline-grid');
+          replace('person-editor').with('fake-person-editor');
+          replace('person-chart').with('fake-person-chart');
+
+          element = fixture('Basic');
+          elementShadowRoot = element.shadowRoot;
+          search = elementShadowRoot.getElementById('search');
+          offlineGrid = elementShadowRoot.getElementById('offlineGrid');
+          editor = elementShadowRoot.getElementById('editor');
+          chart = elementShadowRoot.getElementById('chart');
+        });
+
+        test('instantiating the element works', () => {
+          splitLayout = elementShadowRoot.querySelector('vaadin-split-layout');
+          assert.equal(splitLayout.id, 'topLayout');
+        });
+
+        test('selecting in offline-grid passes value to person-editor', done => {
+          spy = sinon.spy(editor, 'setPerson');
+          offlineGrid.addEventListener('on-select', event => {
+            expect(spy.called).to.be.true;
+            assert.equal(event.detail, "fake-offline-grid-select");
+            done();
+          });
+          offlineGrid.fireSelect();
+        });
+
+        test('adding in offline-grid sets focus on editor', done => {
+          spy = sinon.spy(editor, 'setFocus');
+          offlineGrid.addEventListener('on-add', event => {
+            expect(spy.called).to.be.true;
+            assert.equal(event.detail, "fake-offline-grid-add");
+            done();
+          });
+          offlineGrid.fireAdd();
+        });
+
+        test('changing stats in offline-grid updates chart stats', done => {
+          spy = sinon.spy(chart, 'updateStats');
+          offlineGrid.addEventListener('on-stats', event => {
+            expect(spy.called).to.be.true;
+            assert.equal(event.detail, "fake-offline-grid-stats");
+            done();
+          });
+          offlineGrid.fireStats();
+        });
+
+        test('updating request from editor updates offline-grid', done => {
+          spy = sinon.spy(offlineGrid, 'update');
+          editor.addEventListener('on-update', event => {
+            expect(spy.called).to.be.true;
+            assert.equal(event.detail, "fake-person-editor-update");
+            done();
+          });
+          editor.fireUpdate();
+        });
+
+        test('creating request from editor adds new person in offline-grid', done => {
+          spy = sinon.spy(offlineGrid, 'create');
+          editor.addEventListener('on-create', event => {
+            expect(spy.called).to.be.true;
+            assert.equal(event.detail, "fake-person-editor-create");
+            done();
+          });
+          editor.fireCreate();
+        });
+
+        test('creating request from editor adds new person in offline-grid', done => {
+          spy = sinon.spy(offlineGrid, 'create');
+          editor.addEventListener('on-create', event => {
+            expect(spy.called).to.be.true;
+            assert.equal(event.detail, "fake-person-editor-create");
+            done();
+          });
+          editor.fireCreate();
+        });
+
+        test('deleting request from editor delets person in offline-grid', done => {
+          spy = sinon.spy(offlineGrid, 'delete');
+          editor.addEventListener('on-delete', event => {
+            expect(spy.called).to.be.true;
+            assert.equal(event.detail, "fake-person-editor-delete");
+            done();
+          });
+          editor.fireDelete();
+        });
+
+        test('searching request searches in offline-grid', done => {
+          spy = sinon.spy(offlineGrid, 'search');
+          search.addEventListener('on-find', event => {
+            expect(spy.called).to.be.true;
+            assert.equal(event.detail, "fake-person-search-find");
+            done();
+          });
+          search.fireFind();
+        });
+
+        test('changing elements responsively', () => {
+          let gridArea=elementShadowRoot.getElementById('gridArea'),
+              editorArea=elementShadowRoot.getElementById('editorArea'),
+              wideLayoutAttr='wide-layout';
+
+          element.wide=false;
+          assert.isTrue(chart.hidden);
+          assert.isFalse(gridArea.hasAttribute(wideLayoutAttr));
+          assert.isFalse(editorArea.hasAttribute(wideLayoutAttr));
+          assert.equal(splitLayout.orientation, "vertical");
+
+          element.wide=true;
+          assert.isFalse(chart.hidden);
+          assert.isTrue(gridArea.hasAttribute(wideLayoutAttr));
+          assert.isTrue(editorArea.hasAttribute(wideLayoutAttr));
+          // TODO: splitLayout.orientation takes sometime to update
+          assert.equal(element.orientation, "horizontal");
         });
       });
     </script>
