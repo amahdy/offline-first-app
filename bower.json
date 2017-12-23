@@ -10,7 +10,7 @@
     "jquery": "^3.2.1",
     "iron-a11y-keys": "^2.0.0",
     "paper-toast": "^2.0.0",
-    "vaadin-valo-theme": "vaadin/vaadin-valo-theme#^2.0.0-alpha4",
+    "vaadin-valo-theme": "vaadin/vaadin-valo-theme#2.0.0-alpha5",
     "vaadin-grid": "^4.1.0",
     "vaadin-split-layout": "vaadin/vaadin-split-layout#^4.0.0-alpha2",
     "vaadin-button": "vaadin/vaadin-button#^1.0.5",
