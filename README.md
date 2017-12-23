@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/amahdy/offline-first-app.svg?branch=master)](https://travis-ci.org/amahdy/offline-first-app)
+
 # Offline-First App with Web Components
 
 A concept of an app built with Web Components, with possibilities to query and manipulate data, and works totally offline.
@@ -45,7 +47,7 @@ Make sure you have [Bower](https://bower.io) and [Polymer CLI](https://www.npmjs
 
 ### Installing Dependencies
 
-Install Bower dependencies:
+Install Bower dependencies
 ```bash
 $ bower install
 ```
@@ -73,3 +75,11 @@ You can run this app with a remote database as well, make sure you have a local 
 ### Viewing Your Application
 
 The application will be available on this address by default: [http://localhost:8080](http://localhost:8080).
+
+### Running Tests
+
+Tests can be run locally by visiting this URL: [http://localhost:8081/components/offline-first-app/test/](http://localhost:8081/components/offline-first-app/test/).
+You can also run tests using command line
+```bash
+$ polymer test
+```
