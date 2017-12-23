@@ -49,7 +49,7 @@ Make sure you have [Bower](https://bower.io) and [Polymer CLI](https://www.npmjs
 
 Install Bower dependencies
 ```bash
-$ bower install
+$ polymer install
 ```
 
 ### Running Your Application
@@ -79,6 +79,7 @@ The application will be available on this address by default: [http://localhost:
 ### Running Tests
 
 Tests can be run locally by visiting this URL: [http://localhost:8081/components/offline-first-app/test/](http://localhost:8081/components/offline-first-app/test/).
+
 You can also run tests using command line
 ```bash
 $ polymer test
