@@ -78,7 +78,7 @@ The application will be available on this address by default: [http://localhost:
 
 ### Running Tests
 
-Tests can be run locally by visiting this URL: [http://localhost:8081/components/offline-first-app/test/](http://localhost:8081/components/offline-first-app/test/).
+Tests can be run locally by visiting this URL: [http://localhost:8080/components/offline-first-app/test/](http://localhost:8081/components/offline-first-app/test/).
 
 You can also run tests using command line
 ```bash
