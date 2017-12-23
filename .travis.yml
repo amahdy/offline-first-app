@@ -11,4 +11,4 @@ deploy:
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
   on:
-    branch: gh-pages-test
+    branch: master
