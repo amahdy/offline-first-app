@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>person-search test</title>
+
+    <script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../../web-component-tester/browser.js"></script>
+
+    <script src="../../../iron-test-helpers/mock-interactions.js"></script>
+
+    <link rel="import" href="../../src/offline-first-app/person-search.html">
+  </head>
+  <body>
+
+    <test-fixture id="Basic">
+      <template>
+        <person-search></person-search>
+      </template>
+    </test-fixture>
+
+    <script>
+      suite('person-search', () => {
+        const testWord = "test word", emptyWord = "";
+        let element, elementShadowRoot, searchField, searchBtn, resetBtn;
+
+        setup(() => {
+          element = fixture('Basic');
+          elementShadowRoot = element.shadowRoot;
+          searchField = elementShadowRoot.querySelector('vaadin-text-field');
+          searchBtn = elementShadowRoot.getElementById('searchBtn');
+          resetBtn = elementShadowRoot.getElementById('resetBtn');
+        });
+
+        test('instantiating the element works', () => {
+          assert.equal(elementShadowRoot.querySelector('div').id, 'topLayout');
+        });
+
+        test('firing event when typing with search value', done => {
+          element.addEventListener('on-find', event => {
+            assert.equal(event.detail, testWord);
+            done();
+          });
+          // TODO: search on key-up directly?
+          searchField.value = testWord;
+          MockInteractions.keyUpOn(searchField);
+        });
+
+        test('searching using the search button', done => {
+          element.addEventListener('on-find', event => {
+            assert.equal(event.detail, testWord);
+            done();
+          });
+          searchField.value = testWord;
+          searchBtn.dispatchEvent(new CustomEvent('tap'));
+        });
+
+        test('reseting using the reset button', done => {
+          element.addEventListener('on-find', event => {
+            assert.equal(event.detail, emptyWord);
+            done();
+          });
+          searchField.value = testWord;
+          resetBtn.dispatchEvent(new CustomEvent('tap'));
+        });
+
+        test('toggling reset button', () => {
+          assert.isTrue(resetBtn.hidden);
+          searchField.value = testWord;
+          MockInteractions.keyUpOn(searchField);
+          assert.isFalse(resetBtn.hidden);
+        });
+
+        test('pressing Enter performs search', done => {
+          element.addEventListener('on-find', event => {
+            assert.equal(event.detail, testWord);
+            done();
+          });
+          searchField.value = testWord;
+          MockInteractions.pressEnter(elementShadowRoot);
+        });
+
+        test('pressing ESC resets search', done => {
+          element.addEventListener('on-find', event => {
+            assert.equal(event.detail, emptyWord);
+            done();
+          });
+          searchField.value = testWord;
+          MockInteractions.pressAndReleaseKeyOn(elementShadowRoot, 27);
+        });
+      });
+    </script>
+  </body>
+</html>

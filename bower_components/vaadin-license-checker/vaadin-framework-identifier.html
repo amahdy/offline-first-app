@@ -1,0 +1,160 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<dom-module id="vaadin-framework-identifier">
+    <template>
+
+    </template>
+
+    <script>
+        FrameworkIdentifier = Polymer({
+            is: 'vaadin-framework-identifier',
+
+            properties: {
+                framework: {
+                    type: String,
+                    value: ''
+                },
+                version: {
+                    type: String,
+                    value: ''
+                },
+                _frameworks: {
+                    type: Object,
+                    value: {
+                        'Angular2': function() {
+                            try {
+                                return window.ng;
+                            } catch (e) {
+                                return false;
+                            }
+                        },
+                        'AngularJs': function() {
+                            try {
+                                return window.angular;
+                            } catch (e) {
+                                return false;
+                            }
+                        },
+                        'Backbone.js': function() {
+                            try {
+                                return window.Backbone && typeof(window.Backbone.sync) === 'function';
+                            } catch (e) {
+                                return false;
+                            }
+                        },
+                        'React': function() {
+                            try {
+                                var reactSelector = '[data-reactroot], [data-reactid]';
+                                return !!document.querySelector(reactSelector);
+                            } catch (e) {
+                                return false;
+                            }
+                        },
+                        'Ember': function() {
+                            try {
+                                if (window.Ember) {
+                                    return window.Ember;
+                                } else {
+                                    return window.Em;
+                                }
+                            } catch (e) {
+                                return false;
+                            }
+                        },
+                        'jQuery': function() {
+                            try {
+                                return window.jQuery;
+                            } catch (e) {
+                                return false;
+                            }
+                        },
+                        'Polymer': function() {
+                            // When using Vaadin Charts, Polymer is required.
+                            // Keep this at the bottom
+                            return true;
+                        }
+                    }
+                },
+                _frameworkVersions: {
+                    type: Object,
+                    value: {
+                        'AngularJs': function() {
+                            try {
+                                if (
+                                    window.angular &&
+                                    window.angular.version &&
+                                    'full' in window.angular.version
+                                ) {
+                                    return window.angular.version.full;
+                                }
+                            } catch (e) {
+                                return '';
+                            }
+                        },
+                        'Backbone.js': function() {
+                            try {
+                                if (window.Backbone && window.Backbone.VERSION) {
+                                    return window.Backbone.VERSION;
+                                }
+                            } catch (e) {
+                                return '';
+                            }
+                        },
+                        'jQuery': function() {
+                            try {
+                                if (
+                                    typeof jQuery === 'function' &&
+                                    jQuery.prototype.jquery !== undefined
+                                ) {
+                                    return jQuery.prototype.jquery;
+                                }
+                            } catch (e) {
+                                return '';
+                            }
+                        },
+                        'Ember': function() {
+                            try {
+                                if (window.Em && window.Em.VERSION) {
+                                    return window.Em.VERSION;
+                                } else if (window.Ember && window.Ember.VERSION) {
+                                    return window.Ember.VERSION;
+                                }
+                            } catch (e) {
+                                return '';
+                            }
+                        },
+                        'Polymer': function() {
+                            try {
+                                if (window.Polymer && window.Polymer.version) {
+                                    return window.Polymer.version;
+                                }
+                            } catch (e) {
+                                return '';
+                            }
+                        }
+                    }
+                }
+            },
+
+            setFrameWorkAndVersion: function() {
+                this._setFramework();
+                this._setVersion();
+            },
+
+            _setFramework: function() {
+                for (var framework in this._frameworks) {
+                    if (this._frameworks[framework]()) {
+                        this.framework = framework;
+                        break;
+                    }
+                }
+            },
+
+            _setVersion: function() {
+                if (this.framework && this._frameworkVersions[this.framework]) {
+                    this.version = this._frameworkVersions[this.framework]();
+                }
+            }
+        });
+    </script>
+</dom-module>

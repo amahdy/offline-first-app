@@ -1,0 +1,416 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-localstorage/iron-localstorage.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+
+<link rel="import" href="vaadin-license-box.html">
+<link rel="import" href="vaadin-license-dialog.html">
+<link rel="import" href="vaadin-license-notification.html">
+<link rel="import" href="vaadin-framework-identifier.html">
+
+<dom-module id="vaadin-license-checker">
+
+    <template>
+        <iron-localstorage id="storageLicense" name="[[storageKey]]" value="{{licenseKey}}" use-raw="true">
+        </iron-localstorage>
+
+        <iron-localstorage id="storageLicenseCheckTime" name="[[storageKeyCheckTime]]" value="{{licenseCheckTime}}" use-raw="true">
+        </iron-localstorage>
+
+        <iron-localstorage id="storageLicenseType" name="[[storageKeyType]]" value="{{licenseKeyType}}" use-raw="true">
+        </iron-localstorage>
+
+        <iron-localstorage id="storageLicenseNextCheckTime" name="[[storageKeyNextCheckTime]]" value="{{nextCheckTime}}" use-raw="true">
+        </iron-localstorage>
+
+        <iron-ajax id="licenseRequest" url="[[licenseUrl]]" headers='[[licenseRequestHeaders]]' handle-as="json" on-response="_handleResultFromServer" on-error="_handleErrorFromServer" debounce-duration="300">
+        </iron-ajax>
+    </template>
+
+    <script>
+        LicenseChecker = Polymer({
+            is: "vaadin-license-checker",
+
+            // simple global state to detect multiple instances
+            instances: {},
+
+            licenseDialog: undefined,
+
+            licenseBox: undefined,
+
+            notification: undefined,
+
+            frameworkIdentifier: undefined,
+
+            licenseTypes: {
+                VALID: "valid",
+                UNLICENSED: "unlicensed",
+                TRIAL: "trial",
+                EXPIRED: "expired"
+            },
+
+            properties: {
+                licenseKey: {
+                    type: String,
+                    notify: true
+                },
+                licenseCheckTime: {
+                    type: Number
+                },
+                licenseKeyType: {
+                    type: String
+                },
+                nextCheckTime: {
+                    // It is assumed that everything is fine until this timestamp.
+                    type: Number
+                },
+                licenseUrlBase: {
+                    type: String,
+                    value: "https://tools.vaadin.com/vaadin-license-server/licenses/"
+                },
+                licenseUrl: {
+                    type: String,
+                    computed: '_computeUrl(licenseUrlBase, licenseKey)'
+                },
+                productName: String,
+                productVersion: Number,
+                productCaption: String,
+                storageKey: {
+                    type: String,
+                    computed: '_computeStorageKey(productName)'
+                },
+                storageKeyCheckTime: {
+                    type: String,
+                    computed: '_computeStorageKeyCheckTime(productName)'
+                },
+                storageKeyType: {
+                    type: String,
+                    computed: '_computeStorageKeyType(productName)'
+                },
+                storageKeyNextCheckTime: {
+                    type: String,
+                    computed: '_computeStorageKeyNextCheckTime(productName)'
+                },
+                _yesterday: {
+                    type: Number,
+                    value: function() {
+                        var yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate()-1);
+                        return yesterday.getTime();
+                    },
+                    readOnly: true
+                },
+                _manualSubmit: {
+                    type: Boolean,
+                    value: false
+                },
+                licenseRequestHeaders: String
+            },
+
+            attached: function() {
+                if (!this._exists(this.instances[this.storageKey])) {
+                    this.instances[this.storageKey] = this;
+
+                    if (!this._isLocalhost()) {
+                      return;
+                    }
+
+                    this.$.storageLicense.reload();
+                    this.$.storageLicenseNextCheckTime.reload();
+                    if (!this._exists(this.nextCheckTime)) {
+                      // No license check has ever been done.
+                      // Delay first check for 24h to have a better user experience
+                      this._setNextCheckInOneDay();
+                      this.$.storageLicenseNextCheckTime.save();
+                    }
+
+                    if (new Date().getTime() < this.nextCheckTime) {
+                      // Next check is scheduled for the future, do nothing until then.
+                      return;
+                    }
+                    if (this._exists(this.licenseKey)) {
+                        // There is a license in local storage
+                        this._checkLicenseKey();
+                    } else {
+                        if (this.licenseCheckTime === undefined) {
+                            this.licenseCheckTime = window.localStorage.getItem(
+                                this._computeStorageKeyCheckTime(this.productName)
+                            );
+                        }
+
+                        if (this.licenseCheckTime === null || (this.licenseCheckTime <= this._yesterday)) {
+                            this._showLicenseDialog(this.licenseTypes.UNLICENSED);
+                        } else {
+                            this._showLicenseBox(this.licenseTypes.UNLICENSED);
+                        }
+
+                    }
+                }
+            },
+
+            detached: function() {
+                if (this._existsAndAttached(this.licenseBox)) {
+                    this._removeFromParent(this.licenseBox);
+                    this.licenseBox = undefined;
+                }
+                if (this._existsAndAttached(this.licenseDialog)) {
+                    this._removeFromParent(this.licenseDialog);
+                    this.licenseDialog = undefined;
+                }
+                if (this._existsAndAttached(this.notification)) {
+                    this._removeFromParent(this.notification);
+                    this.notification = undefined;
+                }
+
+                if (this._existsAndAttached(this.frameworkIdentifier)) {
+                    this._removeFromParent(this.frameworkIdentifier);
+                    this.frameworkIdentifier = undefined;
+                }
+
+                if (this.instances[this.storageKey] === this) {
+                    this.instances[this.storageKey] = undefined;
+                }
+            },
+
+            _removeFromParent: function(node) {
+                node.parentNode.removeChild(node);
+            },
+
+
+            _existsAndAttached: function(node) {
+                return node && node.parentNode != undefined;
+            },
+
+            _checkLicenseKey: function(key, manualSubmit) {
+                if (arguments.length === 0) {
+                    //no-args call
+                    key = this.licenseKey;
+                }
+
+                var licenseUrl = this._computeUrl(this.licenseUrlBase,
+                    key);
+
+                this._identifyFramework();
+                this._setLicenseRequestHeaders();
+
+                this.$.licenseRequest.url = licenseUrl;
+
+                this._manualSubmit = !!manualSubmit;
+
+                this.$.licenseRequest.generateRequest();
+            },
+
+            _computeUrl: function(licenseUrlBase, licenseKey) {
+                return licenseUrlBase + licenseKey;
+            },
+
+            _handleErrorFromServer: function(event) {
+                if (this._manualSubmit || this.licenseCheckTime == null || (this.licenseCheckTime <= this._yesterday)) {
+                    this._showLicenseDialog(this.licenseTypes.UNLICENSED);
+                    this.licenseKeyType = this.licenseTypes.UNLICENSED;
+                    this.licenseCheckTime = new Date().getTime();
+                } else if (this.licenseKeyType !== this.licenseTypes.VALID) {
+                    // Show some licensebox
+                    this._showLicenseBox(this.licenseKeyType || this.licenseTypes.UNLICENSED);
+                }
+
+                this._fireLoadReadyEvent();
+            },
+
+            _handleResultFromServer: function(event) {
+                var response = event.detail;
+
+                var result = response.response;
+
+                //result is either invalid somehow, expired, evaluation or successful
+                if (response.status != 200 || !this._isValidLicense(
+                        result.product.name, result.product.version
+                    )) {
+                    this._showLicenseDialog(this.licenseTypes.UNLICENSED);
+                    this.licenseKeyType = this.licenseTypes.UNLICENSED;
+
+                } else {
+                    if (true === result.expired) {
+                        this.licenseKey = result.licenseKey;
+                        this._showLicenseBox(this.licenseTypes.EXPIRED);
+                        this.licenseKeyType = this.licenseTypes.EXPIRED;
+
+                    } else if ("evaluation" === result.type) {
+                        this.licenseKey = result.licenseKey;
+                        this._showLicenseBox(this.licenseTypes.TRIAL,
+                            result.expiredEpoch);
+                        this.licenseKeyType = this.licenseTypes.TRIAL;
+
+                    } else {
+                        //success
+                        if (this.licenseKey !== result.licenseKey) {
+                            //user entered key to dialog
+                            //show success notification and save value
+                            this._showSuccessNotification();
+                            this.licenseKey = result.licenseKey;
+                        }
+                        this.licenseKeyType = this.licenseTypes.VALID;
+                        this._setNextCheckInOneDay();
+                    }
+                }
+
+                this.licenseCheckTime = new Date().getTime();
+
+                this._fireLoadReadyEvent();
+            },
+
+            _isLocalhost: function() {
+                var hostname = window.location.hostname;
+                return (hostname === "localhost" || hostname ===
+                    "127.0.0.1");
+            },
+
+            _isValidLicense: function(productName, productVersion) {
+                return productName === this.productName && (
+                    productVersion == this.productVersion || !
+                    this._exists(productVersion));
+            },
+
+            _fireLoadReadyEvent: function() {
+                this.fire("license-check-done");
+            },
+
+            _exists: function(value) {
+                return value !== null && value !== undefined &&
+                    value !== "";
+            },
+
+            _computeStorageKey: function(productName) {
+                return "vaadin." + productName +
+                    ".developer.license.key";
+            },
+
+            _computeStorageKeyCheckTime: function(productName) {
+                return "vaadin." + productName +
+                    ".license.check.time";
+            },
+
+            _computeStorageKeyType: function(productName) {
+                return "vaadin." + productName +
+                    ".license.key.type";
+            },
+
+            _computeStorageKeyNextCheckTime: function(productName) {
+                return "vaadin." + productName +
+                    ".license.nextcheck";
+            },
+
+            _licenseDialogClosed: function(event) {
+                this._showLicenseBox(event.detail.type, event.detail
+                    .expiryEpoch);
+                this.licenseCheckTime = new Date().getTime();
+                this._hideLicenseDialog();
+            },
+
+            _licenseBoxClosed: function(event) {
+                this._showLicenseDialog(event.detail.type, event.detail
+                    .expiryEpoch);
+                this._hideLicenseBox();
+            },
+
+            _licenseBoxSubmit: function(event) {
+                //check the key without saving it first
+                this._checkLicenseKey(event.detail.licenseKey, true);
+                this.licenseCheckTime = new Date().getTime();
+                this._hideLicenseDialog();
+            },
+
+            _showLicenseDialog: function(type, expiryEpoch) {
+                if (!this.licenseDialog) {
+                    this.licenseDialog = document.createElement('vaadin-license-dialog');
+                }
+                Polymer.dom(document.body).appendChild(this.licenseDialog);
+                this.hideLicenseDialogReference = this._licenseDialogClosed.bind(this);
+                this.hideLicenseBoxSubmitReference = this._licenseBoxSubmit.bind(this);
+                this.licenseDialog.addEventListener(
+                    'vaadin-license-dialog-close', this.hideLicenseDialogReference);
+                this.licenseDialog.addEventListener(
+                    'vaadin-license-dialog-submit', this.hideLicenseBoxSubmitReference);
+
+                this.licenseDialog.type = type;
+                this.licenseDialog.productCaption = this.productCaption;
+
+                if (type === this.licenseTypes.TRIAL) {
+                    this.licenseDialog.expiryEpoch = expiryEpoch;
+                }
+            },
+
+            _hideLicenseDialog: function() {
+              this.licenseDialog.removeEventListener(
+                  'vaadin-license-dialog-close', this.hideLicenseDialogReference);
+              this.licenseDialog.removeEventListener(
+                  'vaadin-license-dialog-submit', this.hideLicenseBoxSubmitReference);
+              Polymer.dom(document.body).removeChild(this.licenseDialog);
+            },
+
+            _showLicenseBox: function(type, expiryEpoch) {
+                if (!this.licenseBox) {
+                    this.licenseBox = new LicenseBox();
+                }
+                Polymer.dom(document.body).appendChild(this.licenseBox);
+                this.hideLicenseBoxReference = this._licenseBoxClosed.bind(this);
+                this.licenseBox.addEventListener(
+                    'vaadin-license-box-close', this.hideLicenseBoxReference);
+
+                this.licenseBox.type = type;
+                this.licenseBox.productCaption = this.productCaption;
+
+                if (type === this.licenseTypes.TRIAL) {
+                    this.licenseBox.expiryEpoch = expiryEpoch;
+                }
+            },
+
+            _hideLicenseBox: function() {
+              this.licenseBox.removeEventListener(
+                  'vaadin-license-box-close', this.hideLicenseBoxReference);
+              Polymer.dom(document.body).removeChild(this.licenseBox);
+
+            },
+
+            _showSuccessNotification: function() {
+                if (!this.notification) {
+                    this.notification = new LicenseNotification();
+                }
+
+                Polymer.dom(this.root).appendChild(this.notification);
+                // Close success notification on click
+                this.hideSuccessReference = this._hideSuccessNotification.bind(this);
+                this.notification.addEventListener('click', this.hideSuccessReference);
+            },
+
+            _hideSuccessNotification: function() {
+              this.notification.removeEventListener('click',
+                  this.hideSuccessReference);
+              Polymer.dom(this.root).removeChild(this.notification);
+            },
+
+            _identifyFramework: function() {
+                if (!this.frameworkIdentifier) {
+                    this.frameworkIdentifier = new FrameworkIdentifier();
+                    Polymer.dom(this).appendChild(this.frameworkIdentifier);
+                }
+                this.frameworkIdentifier.setFrameWorkAndVersion();
+            },
+
+            _setLicenseRequestHeaders: function() {
+                this.licenseRequestHeaders = {
+                    "check-source": "webcomponent",
+                    "framework": this.frameworkIdentifier.framework,
+                    "version": this.frameworkIdentifier.version,
+                    "product-name": this.productName,
+                    "product-version": this.productVersion
+                };
+            },
+
+            _setNextCheckInOneDay: function() {
+              var tomorrow = new Date();
+              tomorrow.setDate(tomorrow.getDate()+1);
+              this.nextCheckTime = tomorrow.getTime();
+            }
+        });
+    </script>
+</dom-module>

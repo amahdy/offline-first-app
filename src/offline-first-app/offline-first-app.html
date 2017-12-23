@@ -1,0 +1,133 @@
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-media-query/iron-media-query.html">
+
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-split-layout.html">
+
+<link rel="import" href="../../bower_components/vaadin-split-layout/vaadin-split-layout.html">
+
+<link rel="import" href="./offline-grid.html">
+<link rel="import" href="./person-editor.html">
+<link rel="import" href="./person-search.html">
+<link rel="import" href="./person-chart.html">
+
+<dom-module id="offline-first-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+        background-color: var(--valo-contrast-5pct);
+      }
+
+      #topLayout {
+        height: 100%;
+      }
+
+      #offlineGrid {
+        margin-left: 8px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        display: flex;
+        flex: 2;
+      }
+
+      #gridArea {
+        display: flex;
+        flex-direction: column;
+        flex: 10000;
+      }
+
+      #gridArea[wide-layout] {
+        width: 75%;
+        height: 100%;
+      }
+
+      #editorArea {
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #editorArea[wide-layout] {
+        width: 25%;
+        height: 100%;
+      }
+
+      #search {
+        padding: 8px;
+      }
+
+      #chart {
+        flex: 2;
+      }
+    </style>
+
+    <iron-media-query query="(min-width: 600px)" query-matches="{{wide}}"></iron-media-query>
+
+    <vaadin-split-layout orientation$="{{orientation}}" id="topLayout" theme="subtle">
+      <div id="gridArea" wide-layout$="{{wide}}">
+        <person-search id="search"></person-search>
+        <offline-grid id="offlineGrid"></offline-grid>
+      </div>
+      <div id="editorArea" wide-layout$="{{wide}}">
+        <person-editor id="editor"></person-editor>
+        <person-chart hidden$="{{!wide}}" id="chart"></person-chart>
+      </div>
+    </vaadin-split-layout>
+  </template>
+
+  <script>
+    class OfflineFirstApp extends Polymer.Element {
+      static get is() { return 'offline-first-app'; }
+
+      static get properties() {
+        return {
+          wide: {
+            type: Boolean,
+            observer: '_wideChanged'
+          },
+        }
+      }
+
+      _wideChanged() {
+        this.orientation = this.wide ? "horizontal" : "vertical";
+      }
+
+      ready() {
+        super.ready();
+
+        this.$.offlineGrid.addEventListener('on-select', evt => {
+          this.$.editor.setPerson(evt.detail);
+        });
+
+        this.$.offlineGrid.addEventListener('on-add', evt => {
+          this.$.editor.setFocus();
+        });
+
+        this.$.offlineGrid.addEventListener('on-stats', evt => {
+          if(this.wide) {
+            this.$.chart.updateStats(evt.detail);
+          }
+        });
+
+        this.$.editor.addEventListener('on-update', evt => {
+          this.$.offlineGrid.update(evt.detail);
+        });
+
+        this.$.editor.addEventListener('on-create', evt => {
+          this.$.offlineGrid.create(evt.detail);
+        });
+
+        this.$.editor.addEventListener('on-delete', evt => {
+          this.$.offlineGrid.delete(evt.detail);
+        });
+
+        this.$.search.addEventListener('on-find', evt => {
+          this.$.offlineGrid.search(evt.detail);
+        });
+      }
+    }
+    customElements.define(OfflineFirstApp.is, OfflineFirstApp);
+  </script>
+</dom-module>

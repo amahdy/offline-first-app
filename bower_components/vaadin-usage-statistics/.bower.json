@@ -1,0 +1,24 @@
+{
+  "name": "vaadin-usage-statistics",
+  "main": "vaadin-usage-statistics.html",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^2.0.0",
+    "vaadin-development-mode-detector": "vaadin/vaadin-development-mode-detector#^1.0.2"
+  },
+  "devDependencies": {
+    "web-component-tester": "^6.4.1",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0"
+  },
+  "homepage": "https://github.com/vaadin/vaadin-usage-statistics",
+  "version": "1.0.3",
+  "_release": "1.0.3",
+  "_resolution": {
+    "type": "version",
+    "tag": "v1.0.3",
+    "commit": "7f7791fbc8010b180bba2a979e92a92cc32b5ee2"
+  },
+  "_source": "https://github.com/vaadin/vaadin-usage-statistics.git",
+  "_target": "^1.0.1",
+  "_originalSource": "vaadin/vaadin-usage-statistics"
+}

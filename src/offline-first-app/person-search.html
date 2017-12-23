@@ -1,0 +1,60 @@
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-a11y-keys/iron-a11y-keys.html">
+
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-button.html">
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-text-field.html">
+<link rel="import" href="../../bower_components/vaadin-valo-theme/icons.html">
+
+<link rel="import" href="../../bower_components/vaadin-button/vaadin-button.html">
+<link rel="import" href="../../bower_components/vaadin-text-field/vaadin-text-field.html">
+
+<dom-module id="person-search">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      #topLayout {
+        display: flex;
+        flex-direction: row;
+      }
+
+      #search {
+        flex: 2;
+      }
+    </style>
+
+    <div id="topLayout">
+      <vaadin-text-field autofocus on-keyup="find" placeholder="Search.." id="search" value="{{value}}">
+        <vaadin-button id="resetBtn" hidden$="{{!value}}" tabindex="-1" theme="icon small contrast tertiary" on-tap="clear" slot="suffix">
+          <iron-icon icon="valo:cross"></iron-icon>
+        </vaadin-button>
+      </vaadin-text-field>
+      <vaadin-button id="searchBtn" theme="icon tertiary" on-tap="find">
+        <iron-icon icon="valo:magnifier"></iron-icon>
+      </vaadin-button>
+    </div>
+
+    <iron-a11y-keys keys="enter" on-keys-pressed="find"></iron-a11y-keys>
+    <iron-a11y-keys keys="esc" on-keys-pressed="clear"></iron-a11y-keys>
+  </template>
+
+  <script>
+    class PersonSearch extends Polymer.Element {
+      static get is() { return 'person-search'; }
+
+      find() {
+        this.dispatchEvent(new CustomEvent('on-find', {detail: this.$.search.value}));
+      }
+
+      clear() {
+        this.$.search.value = '';
+        this.find();
+      }
+    }
+    customElements.define(PersonSearch.is, PersonSearch);
+  </script>
+</dom-module>

@@ -1,0 +1,25 @@
+{
+  "name": "vaadin-license-checker",
+  "authors": [
+    "Vaadin Ltd"
+  ],
+  "license": "Apache-2.0",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "iron-ajax": "PolymerElements/iron-ajax#^2.0.0",
+    "iron-localstorage": "PolymerElements/iron-localstorage#^2.0.0",
+    "polymer": "^2.0.0"
+  },
+  "devDependencies": {
+    "iron-input": "PolymerElements/iron-input#^2.0.0",
+    "web-component-tester": "^6.0.0",
+    "iron-test-helpers": "PolymerElements/iron-test-helpers#^2.0.0"
+  }
+}

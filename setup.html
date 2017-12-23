@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Setup</title>
+    <script src="bower_components/pouchdb/dist/pouchdb.min.js"></script>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+
+    <script>
+    var reset = function() {
+
+      var db_name = "personsdb";
+      var db_url = "http://localhost:5984/" + db_name;
+
+      new PouchDB(db_url).destroy().then(destry => {
+        // Delete local copy as well
+        new PouchDB("local_" + db_name).destroy().then(dest => {
+          $.get('src/resources/data.json', data => {
+            new PouchDB(db_url).bulkDocs(data.result).then(create => {
+              document.write("Database Reseted!");
+            }).catch(insertErr => {
+              document.write("Can't create new database:\n" + insertErr);
+            });
+          });
+        }).catch(destErr => {
+          document.write("Can't destroy local database:\n" + destErr);
+        });
+      }).catch(destroyErr => {
+        document.write("Can't destroy old database:\n" + destroyErr);
+      });
+    };
+    </script>
+
+  </head>
+  <body>
+    <b style="color:red">Warning: this will destroy the current local database `personsdb` and create a new one with a dummy data!</b>
+    <br>
+    <button onclick="reset()">Permenantely Reset The Database!</button>
+  </body>
+</html>

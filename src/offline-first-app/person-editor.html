@@ -1,0 +1,124 @@
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/iron-a11y-keys/iron-a11y-keys.html">
+
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-button.html">
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-text-field.html">
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-text-area.html">
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-form-layout.html">
+<link rel="import" href="../../bower_components/vaadin-icons/vaadin-icons.html">
+<link rel="import" href="../../bower_components/vaadin-form-layout/vaadin-form-layout.html">
+
+<link rel="import" href="../../bower_components/vaadin-button/vaadin-button.html">
+<link rel="import" href="../../bower_components/vaadin-text-field/vaadin-text-field.html">
+<link rel="import" href="../../bower_components/vaadin-text-field/vaadin-text-area.html">
+
+<dom-module id="person-editor">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+
+    <vaadin-form-layout class="with-text-fields">
+      <vaadin-text-field required minlength="3" placeholder="First Name" id="firstName"></vaadin-text-field>
+      <vaadin-text-field placeholder="Last Name" id="lastName"></vaadin-text-field>
+      <vaadin-text-field placeholder="Phone" id="phone"></vaadin-text-field>
+      <vaadin-text-field placeholder="E-Mail" id="email"></vaadin-text-field>
+      <vaadin-text-area placeholder="Address" id="address"></vaadin-text-area>
+    </vaadin-form-layout>
+
+    <vaadin-button id="updateBtn" on-tap="update">
+      <template is="dom-if" if="[[isUpdate]]">
+        Update
+      </template>
+      <template is="dom-if" if="[[!isUpdate]]">
+        Create
+      </template>
+    </vaadin-button>
+    <vaadin-button id="delBtn" hidden$="[[!isUpdate]]" theme="error" on-tap="delete">
+      Delete
+    </vaadin-button>
+
+    <iron-a11y-keys keys="enter" on-keys-pressed="update"></iron-a11y-keys>
+  </template>
+
+  <script>
+    class PersonEditor extends Polymer.Element {
+      static get is() { return 'person-editor'; }
+
+      static get properties() {
+        return {
+          person: {
+            type: Object,
+            value: {address: {}}
+          },
+  
+          isUpdate: {
+            type: Boolean,
+            value: false
+          },
+        }
+      }
+
+      _fillForm(person) {
+        if(!person) {
+          person = {};
+        }
+        if(!person.address) {
+          person.address = {};
+        }
+        this.person = person;
+        this.$.firstName.value = person.firstName;
+        this.$.lastName.value = person.lastName;
+        this.$.phone.value = person.address.phone;
+        this.$.email.value = person.email;
+        this.$.address.value = person.address.street;
+      }
+
+      _readForm() {
+        this.person.firstName = this.$.firstName.value;
+        this.person.lastName = this.$.lastName.value;
+        this.person.address.phone = this.$.phone.value;
+        this.person.email = this.$.email.value;
+        this.person.address.street = this.$.address.value;
+      }
+
+      setFocus() {
+        this.$.firstName.focus();
+      }
+
+      setPerson(person) {
+        this._fillForm(person);
+        if(person) {
+          // Only focus when editing or manually adding.
+          // Don't focus on first load of the page.
+          // Don't focus after de-selection.
+          this.setFocus();
+
+          this.isUpdate = true;
+        }else {
+          this.isUpdate = false;
+        }
+      }
+
+      update() {
+        if(this.$.firstName.validate()) {
+          this._readForm();
+          this.dispatchEvent(new CustomEvent(
+            this.isUpdate ? 'on-update' : 'on-create', {detail: this.person}));
+        }else {
+          // UI will notify of validation error.
+          this.$.firstName.blur();
+        }
+      }
+
+      delete() {
+        this.dispatchEvent(new CustomEvent('on-delete', {detail: this.person}));
+      }
+    }
+    customElements.define(PersonEditor.is, PersonEditor);
+  </script>
+</dom-module>

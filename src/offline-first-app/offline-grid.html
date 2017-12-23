@@ -1,0 +1,535 @@
+
+<script src="../../bower_components/pouchdb/dist/pouchdb.min.js"></script>
+<script src="../../bower_components/pouchdb-find/dist/pouchdb.find.min.js"></script>
+<script src="../../bower_components/jquery/dist/jquery.min.js"></script>
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/polymer/lib/elements/dom-if.html">
+
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-grid.html">
+<link rel="import" href="../../bower_components/vaadin-valo-theme/vaadin-button.html">
+<link rel="import" href="../../bower_components/vaadin-icons/vaadin-icons.html">
+
+<link rel="import" href="../../bower_components/vaadin-grid/vaadin-grid.html">
+<link rel="import" href="../../bower_components/vaadin-button/vaadin-button.html">
+
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
+
+<dom-module id="offline-grid">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      .data-area {
+        height: 100%;
+        width: 100%;
+      }
+
+      .grid-cell {
+        display: inline;
+      }
+
+      .search-highlight {
+        background-color: yellow;
+      }
+
+      .add-button {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        border-radius: 50%;
+      }
+
+      .main-col {
+        flex-grow: 1;
+      }
+
+      .main-col[wide-layout] {
+        width: 250px;
+        flex-grow: 0;
+      }
+    </style>
+
+    <iron-media-query query="(min-width: 600px)" query-matches="{{wide}}"></iron-media-query>
+
+    <template is="dom-if" if="{{!size}}">
+      <center class="data-area"><strong>No Contacts Found</strong></center>
+    </template>
+    <vaadin-grid
+      id="lazyGrid"
+      class="data-area"
+      aria-label="Offline Grid"
+      data-provider="[[dataProvider]]"
+      active-item="{{activeItem}}"
+      selected-items="{{selectedItems}}"
+      item-id-path="_id"
+      size="[[size]]"
+      hidden$="{{!size}}">
+
+      <vaadin-grid-column class="main-col" wide-layout$="{{wide}}">
+        <template class="header">Name</template>
+        <template>
+          <span class="grid-cell">
+            <template is="dom-if" if="[[item.highlight_firstName]]">
+              <span inner-H-T-M-L="[[item.highlight_firstName]]"></span>
+            </template>
+            <template is="dom-if" if="[[!item.highlight_firstName]]">
+              [[item.firstName]]
+            </template>
+            <template is="dom-if" if="[[item.highlight_lastName]]">
+              <span inner-H-T-M-L="[[item.highlight_lastName]]"></span>
+            </template>
+            <template is="dom-if" if="[[!item.highlight_lastName]]">
+              [[item.lastName]]
+            </template>
+          </span>
+        </template>
+      </vaadin-grid-column>
+
+      <vaadin-grid-column width="170px" flex-grow="0" hidden$="{{!wide}}">
+        <template class="header">Phone</template>
+        <template>
+          <span class="grid-cell">
+            <template is="dom-if" if="[[item.address.highlight_phone]]">
+              <span inner-H-T-M-L="[[_formatPhone(item.address.highlight_phone)]]"></span>
+            </template>
+            <template is="dom-if" if="[[!item.address.highlight_phone]]">
+              [[_formatPhone(item.address.phone)]]
+            </template>
+          </span>
+        </template>
+      </vaadin-grid-column>
+
+      <vaadin-grid-column flex-grow="1" hidden$="{{!wide}}">
+        <template class="header">Address</template>
+        <template>
+          <span class="grid-cell">
+            <template is="dom-if" if="[[item.address.highlight_street]]">
+              <span inner-H-T-M-L="[[item.address.highlight_street]]"></span>
+            </template>
+            <template is="dom-if" if="[[!item.address.highlight_street]]">
+              [[item.address.street]]
+            </template>
+            <template is="dom-if" if="[[item.address.city]]">
+              ,
+            </template>
+            <template is="dom-if" if="[[item.address.highlight_city]]">
+              <span inner-H-T-M-L="[[item.address.highlight_city]]"></span>
+            </template>
+            <template is="dom-if" if="[[!item.address.highlight_city]]">
+              [[item.address.city]]
+            </template>
+          </span>
+        </template>
+      </vaadin-grid-column>
+    </vaadin-grid>
+
+    <div style="position:relative">
+      <vaadin-button class="add-button" on-tap="add" theme="icon primary">
+        <iron-icon icon="vaadin:plus"></iron-icon>
+      </vaadin-button>
+    </div>
+
+    <paper-toast
+      id="demoWarn" 
+      class="fit-bottom"
+      text="Unable to find remote nor locale database, install demo mode?"
+      duration="0">
+      <vaadin-button on-tap="_installDemo" theme="tertiary" style="color:red;">
+        Run Demo
+      </vaadin-button>
+    </paper-toast>
+  </template>
+
+  <script>
+    class OfflineGrid extends Polymer.Element {
+      static get is() { return 'offline-grid'; }
+
+      static get properties() {
+        return {
+          demoMode: {
+            type: Boolean,
+            value: false
+          },
+
+          activeItem: {
+            observer: '_activeItemChanged',
+          },
+
+          selectedItems: {
+            observer: '_selectedItemsChanged',
+          },
+
+          // Remote DB, running on a local instance of CouchDB.
+          remoteDB: {
+            type: PouchDB,
+            value: new PouchDB('http://localhost:5984/personsdb'),
+          },
+
+          // Local DB, the synched version of `remoteDB`
+          localDB: {
+            type: PouchDB,
+            value: new PouchDB('local_personsdb'),
+          },
+
+          allDocs: Array, // All docs in the grid.
+
+          // Size of total rows in the grid.
+          size: {
+            type: Number,
+            value: 0
+          },
+
+          searchValue: String, // Last known search vlaue.
+
+          searchResults: Array, // Filter grid based on those results.
+
+          stateStats: {
+            type: Object,
+            value: {}
+          },
+
+          stateStatsIds: {
+            type: Array,
+            value: []
+          },
+        }
+      }
+
+      _getSelectedItem() {
+        return this.selectedItems[0];
+      }
+
+      _setSelectedItem(selectedItem) {
+        if(selectedItem) {
+          this.selectedItems = [selectedItem];
+        }else {
+          this.selectedItems = [];
+        }
+      }
+
+      _activeItemChanged(activeItem) {
+        this._setSelectedItem(activeItem);
+      }
+
+      _selectedItemsChanged() {
+        this.dispatchEvent(new CustomEvent('on-select', {detail: this._getSelectedItem()}));
+      }
+
+      _refreshGrid(selectedPerson) {
+        this._setSelectedItem(selectedPerson);
+        // Search will perform the refresh, no need to duplicate
+        if(this.searchValue) {
+          this.search(this.searchValue, selectedPerson);
+        }else {
+          this.$.lazyGrid.clearCache();
+        }
+        if(selectedPerson) {
+          this.$.lazyGrid._scrollToIndex(this._getSelectedItem().idx);
+        }
+      }
+
+      _loadData() {
+        if(!this.demoMode)
+        PouchDB.sync(this.remoteDB, this.localDB, {
+          live: true,
+          retry: true,
+        });
+
+        // TODO: Sort items, but this is server-side issue
+        this.localDB.allDocs({endkey: '_design'}).then(eResult => {
+          this.localDB.allDocs({startkey: '_design\uffff'}).then(sResult => {
+            this.allDocs = eResult.rows.concat(sResult.rows);
+
+            this.dataProvider = (params, callback) => {
+
+              let currentIndex = params.page * params.pageSize;
+              let usedDocs = this.searchValue ? this.searchResults : this.allDocs;
+              this.size = usedDocs.length;
+
+              // Construct docs starting from current index,
+              // and up to the requested length by Grid.
+              let currentDocs = usedDocs.slice(currentIndex, currentIndex+params.pageSize);
+
+              let data = [];
+              if(currentDocs.length > 0) {
+                this.localDB.bulkGet({
+                  docs: currentDocs,
+                }).then(json => {
+                  for(let i=0; i<json.results.length; i++) {
+                    data[i] = json.results[i].docs[0].ok;
+                    // TODO: avoid keeping track of indexes
+                    // https://github.com/vaadin/vaadin-grid/issues/1154
+                    data[i].idx = i + currentIndex;
+
+                    // Update stats
+                    if(this.stateStatsIds.indexOf(data[i]._id)<0) {
+                      this.stateStatsIds.push(data[i]._id);
+                      if(data[i].address.state) {
+                        if(this.stateStats[data[i].address.state]) {
+                          this.stateStats[data[i].address.state]++;
+                        }else {
+                          this.stateStats[data[i].address.state] = 1;
+                        }
+                      }else {
+                        if(this.stateStats["unknown"]) {
+                          this.stateStats["unknown"]++;
+                        }else {
+                          this.stateStats["unknown"] = 1;
+                        }
+                      }
+                    }
+
+                    // Hilight docs in search mode
+                    // if(this.searchValue && currentDocs[i].highlighting) {
+                    //   for (prop in currentDocs[i].highlighting) {
+                    //     let highlightKey = 'highlight_' + prop.replace('.', '_');
+                    //     data[i][highlightKey] = currentDocs[i].highlighting[prop];
+                    //   }
+                    // }
+                    if(this.searchValue) {
+                      for(let prop in data[i]) {
+                        if(prop == "address") {
+                          for(let subProp in data[i][prop]) {
+                            this._formatHighlight(data[i][prop], subProp);
+                          }
+                        }else if(prop != "idx") {
+                          this._formatHighlight(data[i], prop);
+                        }
+                      }
+                    }
+                  }
+                  this._stateStatsChanged();
+                  callback(data);
+                });
+              }else {
+                this._stateStatsChanged();
+                callback(data);
+              }
+            }
+          });
+        });
+      }
+
+      _installDemo() {
+        $.get('src/resources/data.json', data => {
+          this.localDB.bulkDocs(data.result).then(create => {
+            location.href = "./?rundemo";
+          }).catch(insertErr => {
+            document.write("Failed to create local demo:\n" + insertErr);
+          });
+        });
+      }
+
+      _resetDemo() {
+        this.localDB.destroy().then(dest => {
+          location.href = "./";
+        }).catch(destErr => {
+          document.write("Can't destroy local database:\n" + destErr);
+        });
+      }
+
+      _stateStatsChanged() {
+        this.dispatchEvent(new CustomEvent('on-stats', {detail: this.stateStats}));
+      }
+
+      _formatPhone(phoneNumber) {
+        if(phoneNumber) {
+          // TODO: does not format if highlighted in search
+          return phoneNumber.replace(/(\d{3})(\d{3})(.*)/, "($1) $2-$3");
+        }
+      }
+
+      _formatHighlight(data, prop, highlightKey) {
+        let expression = RegExp(this.searchValue, 'i'); // TODO: use /g/ to highlight all
+        let match = data[prop].match(expression);
+        if(match) {
+          let highlight = data[prop].replace(
+            expression,
+            '<span class="search-highlight">' + match[0] + '</span>'
+          );
+          data['highlight_' + prop] = highlight;
+        }
+      }
+
+      ready() {
+        super.ready();
+
+        // Check if demo reset is requested
+        if(location.href.endsWith("?resetdemo")) {
+          this._resetDemo();
+        }
+
+        // Check if demo mode is requested
+        if(location.href.endsWith("?demo")) {
+          this._installDemo();
+        }
+
+        // Running in demo mode
+        if(location.href.endsWith("?rundemo")) {
+          this.demoMode = true;
+        }
+
+        // For first visit, we must replicate first
+        this.localDB.info().then(localdbinfo => {
+          if(localdbinfo.doc_count === 0) {
+            // TODO: Handle other errors
+            // TODO: Do this in the background and display already loaded data
+            PouchDB.replicate(this.remoteDB, this.localDB).on('complete', info => {
+              this._loadData();
+            }).on('error', err => {
+              this.$.demoWarn.open();
+            });
+          }else {
+            this._loadData();
+          }
+        });
+      }
+
+      update(newPerson) {
+        // Cleanup before storing
+        for(let prop in newPerson) {
+          if(prop=="address") {
+            for(let subProp in newPerson[prop]) {
+              if(subProp.startsWith('highlight_')) {
+                delete newPerson[prop][subProp];
+              }
+            }
+          }else if(prop.startsWith('highlight_')) {
+            delete newPerson[prop];
+          }
+        }
+        let idx = newPerson.idx;
+        delete newPerson.idx;
+
+        this.localDB.put(newPerson).then(response => {
+          // TODO: Bug? Grid does not update selectedItems after clearCache
+          // https://github.com/vaadin/vaadin-grid/issues/1153
+          newPerson._rev = response.rev;
+          newPerson.idx = idx;
+
+          this._refreshGrid(newPerson);
+        });
+      }
+
+      create(newPerson) {
+        this.localDB.post(newPerson).then(response => {
+          // Insert in the begining
+          this.allDocs.unshift({
+            id: response.id
+          });
+          newPerson.idx = 0;
+          newPerson._id = response.id;
+          newPerson._rev = response.rev;
+
+          // Update stats
+          this.stateStatsIds.push(newPerson._id);
+          // TODO: Add possibility to chose state ..etc
+          if(this.stateStats["unknown"]) {
+            this.stateStats["unknown"]++;
+          }else {
+            this.stateStats["unknown"] = 1;
+          }
+
+          this._refreshGrid(newPerson);
+        });
+      }
+
+      delete(person) {
+        this.localDB.remove(person).then(response => {
+          // Empty local properties
+          this.allDocs.splice(this.allDocs.findIndex(e => e.id==response.id), 1);
+          this.stateStatsIds.splice(person._id, 1);
+
+          // Cleanup stats
+          if(person.address.state) {
+            this.stateStats[person.address.state]--;
+            if(this.stateStats[person.address.state]==0) {
+              delete this.stateStats[person.address.state];
+            }
+          }else {
+            this.stateStats["unknown"]--;
+            if(this.stateStats["unknown"]==0) {
+              delete this.stateStats["unknown"];
+            }
+          }
+
+          this._refreshGrid(null);
+        });
+      }
+
+      search(value, selection=null) {
+        this.searchValue = value;
+
+        // Make sure to unselect any selected item
+        this._setSelectedItem(selection);
+
+        // Reset chart
+        this.stateStatsIds = new Array();
+        this.stateStats = {};
+
+        if(value) {
+          this.localDB.find({
+            selector: {
+              _id: {$gte: null},
+              $or:[
+                {'firstName': {$regex: RegExp(".*"+value+".*", "i")}},
+                {'lastName': {$regex: RegExp(".*"+value+".*", "i")}},
+                {'address.street': {$regex: RegExp(".*"+value+".*", "i")}},
+                {'address.city': {$regex: RegExp(".*"+value+".*", "i")}},
+                {'address.state': {$regex: RegExp(".*"+value+".*", "i")}},
+                {'address.phone': {$regex: RegExp(".*"+value+".*", "i")}},
+                // TODO: should add more columns? not shown in grid though
+              ]
+            },
+            fields: ['_id']
+          // });
+          // TODO: Fix custom search
+          // this.localDB.search({
+          //   query: value,
+          //   fields: [
+          //     'firstName',
+          //     'lastName',
+          //     'address.street',
+          //     'address.city',
+          //     'address.state',
+          //     'address.zip',
+          //     'address.country',
+          //     'address.phone',
+          //     'address.email'
+          //   ],
+          //   highlighting: true,
+          //   highlighting_pre: '<span class="search-highlight">',
+          //   highlighting_post: '</span>'
+          }).then(response => {
+            // this.searchResults = response.rows;
+            this.searchResults = response.docs;
+            // Seriously? You don't need this in quick-search
+            for(let i in this.searchResults) {
+              this.searchResults[i].id = this.searchResults[i]._id;
+              delete this.searchResults[i]._id;
+            }
+            this.$.lazyGrid.clearCache();
+          }).catch(function (err) {
+            // TODO: Handle error
+          });
+        }else {
+          // Clear search
+          this.searchResults = undefined;
+          this.size = this.allDocs.length;
+          this.$.lazyGrid.clearCache();
+        }
+      }
+
+      add() {
+        // Clear selection first
+        this._setSelectedItem(null);
+
+        this.dispatchEvent(new CustomEvent('on-add'));
+      }
+    }
+    customElements.define(OfflineGrid.is, OfflineGrid);
+  </script>
+</dom-module>

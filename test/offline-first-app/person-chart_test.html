@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>person-chart test</title>
+
+    <script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../../web-component-tester/browser.js"></script>
+
+    <link rel="import" href="../../src/offline-first-app/person-chart.html">
+  </head>
+  <body>
+
+    <test-fixture id="Basic">
+      <template>
+        <person-chart></person-chart>
+      </template>
+    </test-fixture>
+
+    <script>
+      suite('person-chart', () => {
+        let element, elementShadowRoot;
+
+        setup(() => {
+          element = fixture('Basic');
+          elementShadowRoot = element.shadowRoot;
+        });
+
+        test('instantiating the element works', () => {
+          expect(elementShadowRoot.querySelector('vaadin-pie-chart')).to.exists;
+        });
+
+        test('updating stats works', () => {
+          expect(element.data).to.be.empty;
+
+          // Adding one element works
+          let data = {"California":1};
+          element.updateStats(data);
+          assert(element.data, ["PST", 1]);
+
+          // Old data is not preserved
+          data = {"Alabama":1};
+          element.updateStats(data);
+          assert(element.data, ["CST", 1]);
+
+          // Different data works
+          data = {"Alabama":1,"California":1};
+          element.updateStats(data);
+          assert(element.data, ["PST",1,"CST",1]);
+
+          // Same timezone adds up
+          data = {"Alabama":1,"Mississippi":1};
+          element.updateStats(data);
+          assert(element.data, ["CST", 2]);
+
+          // Empty count does not add up
+          data = {"Utah":5,"Colorado":0};
+          element.updateStats(data);
+          assert(element.data, ["MST", 5]);
+
+          // All timezones are covered
+          data = {"Alaska":5,"South Dakota":3,"Aleutian Islands":7,"Montana":40,"Washington":2,"Pennsylvania":1,"Cairo":77};
+          element.updateStats(data);
+          assert(element.data, ["CST",3,"AKST",5,"HST",7,"MST",40,"PST",2,"EST",1,"UNKNOWN",77]);
+
+          // Wrong data goes to "UNKNOWN"
+          data = {undefined:1,"Cairo":1};
+          element.updateStats(data);
+          assert(element.data, ["UNKNOWN", 2]);
+
+          // Empty data does nothing
+          data = {};
+          element.updateStats(data);
+          assert(element.data, []);
+
+          // Null data does nothing
+          data = null;
+          element.updateStats(data);
+          assert(element.data, []);
+        });
+      });
+    </script>
+  </body>
+</html>

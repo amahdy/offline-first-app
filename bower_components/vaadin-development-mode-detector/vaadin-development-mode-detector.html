@@ -1,0 +1,81 @@
+<link rel="import" href="../polymer/lib/utils/import-href.html">
+
+<dom-module id="vaadin-development-mode-probe">
+</dom-module>
+
+<script>
+function isForcedDevelopmentMode() {
+  return localStorage.getItem("vaadin.developmentmode.force");
+}
+function isLocalhost() {
+  return (["localhost","127.0.0.1"].indexOf(window.location.hostname) >= 0);
+}
+function endsWith(string, ending) {
+  return string.lastIndexOf(ending) == string.length-ending.length;
+}
+function getHtmlImports(scope, htmlImports) {
+  if (scope) {
+    const imports = [...scope.querySelectorAll("link[rel=import]")];
+    imports.forEach(function(link) {
+      if (htmlImports.indexOf(link.href) == -1) {
+        htmlImports.push(link.href);
+        this.getHtmlImports(link.import, htmlImports)
+      }
+    });
+  }
+  return htmlImports;
+}
+
+function isUnbundled() {
+  // If the app is bundled, then polymer.html should be included in some bundle and not in `polymer/polymer.html`
+  const htmlImports = this.getHtmlImports(document, []);
+  return htmlImports.filter(function(href) { return endsWith(href, "polymer/polymer-element.html")}).length > 0;
+}
+function isFlowProductionMode() {
+  if (window.vaadin && window.vaadin.clients) {
+    const productionModeApps = Object.keys(window.vaadin.clients)
+    .map(key => window.vaadin.clients[key])
+    .filter(client => client.productionMode);
+    if (productionModeApps.length > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+if (!window.Vaadin) {
+  window.Vaadin = {};
+}
+if (typeof window.Vaadin.developmentMode === "undefined") {
+  window.Vaadin.developmentMode = isForcedDevelopmentMode() || (isLocalhost() && isUnbundled() && !isFlowProductionMode());
+
+  const importAndRun = function(id, optionalArgument) {
+    var path = Polymer.DomModule.import("vaadin-development-mode-probe").assetpath;
+    path = path + "../" + id + "/" + id + ".html";
+    return Polymer.importHref(path, function() {
+      if (window.Vaadin && window.Vaadin.developmentModeCallback) {
+        const callback = window.Vaadin.developmentModeCallback[id];
+        if (callback) {
+          callback(optionalArgument);
+        }
+      }
+    }, function() {}, true);
+  }
+  window.Vaadin.runIfDevelopmentMode = function(id, optionalArgument) {
+    // Imports a HTML file named "id"/id".html and
+    // triggers a callback defined in window.Vaadin.developmentModeCallback (if present)
+    // with the given (optional) argument
+    if (!window.Vaadin.developmentMode) {
+      return;
+    }
+
+    if (window.HTMLImports) {
+      HTMLImports.whenReady(function() {
+        importAndRun(id, optionalArgument);
+      });
+    } else {
+      importAndRun(id, optionalArgument);
+    }
+  }
+}
+</script>

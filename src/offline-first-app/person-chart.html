@@ -1,0 +1,92 @@
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../bower_components/vaadin-charts/vaadin-charts.html">
+
+<dom-module id="person-chart">
+  <template>
+    <style>
+    :host {
+      display: block;
+    }
+
+    :host([hidden]) {
+      display: none !important;
+    }
+    </style>
+
+    <vaadin-pie-chart>
+      <chart-title text="null"></chart-title>
+      <exporting enabled="false"></exporting>
+      <chart background-color="rgba(255, 255, 255, 0)"></chart>
+      <plot-options>
+        <pie>
+          <data-labels enabled="true" format="<b>{point.name}</b>:  {point.percentage:.1f} %">
+          </data-labels>
+        </pie>
+      </plot-options>
+
+      <data-series data=[[data]]>
+      </data-series>
+    </vaadin-pie-chart>
+  </template>
+
+  <script>
+    class PersonChart extends Polymer.Element {
+      static get is() { return 'person-chart'; }
+
+      static get properties() {
+        return {
+          data: {
+            type: Array
+          },
+
+          timezones: {
+            type: Object,
+            value: {
+              "CST": [
+                "Alabama", "Arkansas", "Illinois", "Iowa", "Kansas", "Kentucky",
+                "Louisiana", "Minnesota", "Mississippi", "Missouri", "Nebraska",
+                "North Dakota", "Oklahoma", "South Dakota", "Tennessee", "Texas", "Wisconsin"
+              ],
+              "AKST": ["Alaska"],
+              "HST": ["Aleutian Islands", "Hawaii"],
+              "MST": ["Arizona", "Colorado", "Idaho", "Montana", "New Mexico", "Utah", "Wyoming"],
+              "PST": ["California", "Nevada", "Oregon", "Washington"],
+              "EST": [
+                "Connecticut", "Delaware", "Florida", "Georgia", "Indiana", "Maine",
+                "Maryland", "Massachusetts", "Michigan", "New Hampshire", "New Jersey",
+                "New York", "North Carolina", "Ohio", "Pennsylvania", "Rhode Island",
+                "South Carolina", "Vermont", "Virginia", "District of Columbia", "West Virginia"
+              ],
+              "UNKNOWN": ["unknown"]
+            }
+          }
+        }
+      }
+
+      updateStats(stateStats) {
+        let currentData = new Array();
+
+        // Iterates 7 times exactely
+        for(let zone in this.timezones) {
+          // N times, depends on number of data fetched
+          for(let state in stateStats) {
+            // Max 21 iterations, avg < 3.6 iterations
+            if(this.timezones[zone].indexOf(state) > -1) {
+              let count = stateStats[state];
+              if(currentData[zone]) {
+                currentData[zone]+=count;
+              }else {
+                currentData[zone]=count;
+              }
+            }
+          }
+        }
+
+        this.data = Object.entries(currentData);
+      }
+    }
+    customElements.define(PersonChart.is, PersonChart);
+  </script>
+</dom-module>

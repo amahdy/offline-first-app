@@ -1,0 +1,47 @@
+{
+  "name": "vaadin-split-layout",
+  "description": "Polymer element for partitioning a layout into resizeable areas",
+  "authors": [
+    "Vaadin Ltd"
+  ],
+  "keywords": [
+    "web-components",
+    "web-component",
+    "polymer",
+    "Vaadin",
+    "split-panel",
+    "split-layout"
+  ],
+  "main": "vaadin-split-layout.html",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/vaadin/vaadin-split-layout"
+  },
+  "dependencies": {
+    "polymer": "^2.0.0",
+    "iron-resizable-behavior": "^2.0.0",
+    "vaadin-themable-mixin": "^1.1.0",
+    "vaadin-valo-styles": "vaadin/vaadin-valo-styles#^2.0.0",
+    "vaadin-element-mixin": "vaadin/vaadin-element-mixin#^1.0.1"
+  },
+  "devDependencies": {
+    "iron-component-page": "^3.0.0",
+    "iron-icon": "^2.0.0",
+    "iron-icons": "^2.0.0",
+    "iron-test-helpers": "^2.0.0",
+    "web-component-tester": "^6.1.5",
+    "vaadin-demo-helpers": "^1.0.0"
+  },
+  "homepage": "https://github.com/vaadin/vaadin-split-layout",
+  "version": "4.0.0-alpha2",
+  "_release": "4.0.0-alpha2",
+  "_resolution": {
+    "type": "version",
+    "tag": "v4.0.0-alpha2",
+    "commit": "71b3d86ca7f5ab3161ce81be77a5861c7e76b920"
+  },
+  "_source": "https://github.com/vaadin/vaadin-split-layout.git",
+  "_target": "^4.0.0-alpha2",
+  "_originalSource": "vaadin/vaadin-split-layout"
+}

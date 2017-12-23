@@ -1,0 +1,78 @@
+<link rel="import" href="../../../vaadin-valo-styles/color.html">
+<link rel="import" href="../../../vaadin-valo-styles/sizing.html">
+<link rel="import" href="../../../vaadin-valo-styles/spacing.html">
+<link rel="import" href="../../../vaadin-valo-styles/style.html">
+
+<dom-module id="valo-split-layout" theme-for="vaadin-split-layout">
+  <template>
+    <style>
+      :host {
+        --valo-split-layout-size: var(--valo-space-s);
+      }
+
+      [part="splitter"] {
+        min-width: var(--valo-split-layout-size);
+        min-height: var(--valo-split-layout-size);
+        background-color: var(--valo-contrast-5pct);
+        transition: 0.1s background-color;
+      }
+
+      [part="handle"] {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      [part="handle"]::after {
+        content: "";
+        display: block;
+        width: var(--valo-space-xs);
+        height: var(--valo-size-s);
+        border-radius: var(--valo-border-radius);
+        background-color: var(--valo-contrast-30pct);
+        transition: 0.1s background-color;
+      }
+
+      :host([orientation="vertical"]) [part="handle"]::after {
+        transform: rotate(90deg);
+      }
+
+      /* Hover style */
+
+      [part="splitter"]:hover [part="handle"]::after {
+        background-color: var(--valo-contrast-40pct);
+      }
+
+      /* Disable hover for touch devices */
+      @media (pointer: coarse) {
+        [part="splitter"]:hover [part="handle"]::after {
+          background-color: var(--valo-contrast-30pct);
+        }
+      }
+
+      /* Active style */
+
+      [part="splitter"]:active [part="handle"]::after {
+        background-color: var(--valo-contrast-50pct);
+      }
+
+      /* Small style */
+
+      :host([theme~="small"]) {
+        --valo-split-layout-size: var(--valo-space-xs);
+      }
+
+      :host([theme~="small"]) [part="handle"]::after {
+        width: calc(var(--valo-space-xs) / 2);
+      }
+
+      /* Subtle style */
+
+      :host([theme~="subtle"]) [part="splitter"] {
+        background-color: transparent;
+      }
+    </style>
+  </template>
+</dom-module>
+
+<link rel="import" href="../../src/vaadin-split-layout.html">
